@@ -10,7 +10,7 @@ Designed to be small, fast, and transparent. Integrates with user-defined record
 ---------------------------------------------------------------------------
                                             Memory:  Footprint:
 # > python                                  4656 K   4656 K (Python 3.4.3 osx)
-# >>> from bl.db.database import Database   5460 K    804 K (YMMV)
+# >>> from bl.database import Database   5460 K    804 K (YMMV)
 ---------------------------------------------------------------------------
 Sample session: 
 >>> d = Database()      # in-memory sqlite3 database

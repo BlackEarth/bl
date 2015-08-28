@@ -1,8 +1,7 @@
 
-
 import os
 from glob import glob
-from .model import Model
+from bl.model import Model
 
 class Migration(Model):
     relation = 'migrations'

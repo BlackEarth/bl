@@ -2,7 +2,7 @@
 from lxml import etree
 from bl.dict import Dict
 from bl.string import String
-from .xml import XML
+from bl.xml import XML
 
 XSL_NAMESPACE = "xmlns:xsl='http://www.w3.org/1999/XSL/Transform'"
 XSL_TEMPLATE = """<xsl:stylesheet version="1.0" %s%s><xsl:output method="xml"/></xsl:stylesheet>"""

@@ -15,7 +15,7 @@ class ElementMaker(lxml.builder.ElementMaker):
                 chs.append(ch)
         return lxml.builder.ElementMaker.__call__(self, tag, *chs, **attrib)
 
-class Builder(Dict):
+class XBuilder(Dict):
     """create a set of ElementMaker methods all bound to the same object."""
     def __init__(self, default=None, nsmap=None, **namespaces):
         Dict.__init__(self)

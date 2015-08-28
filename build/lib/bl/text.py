@@ -1,6 +1,6 @@
 
 import os, shutil, tempfile
-from .file import File
+from bl.file import File
 
 class Text(File):
 

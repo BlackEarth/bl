@@ -1,7 +1,6 @@
 
 import os, re, sys, subprocess, tempfile
 from bl.text import Text
-from . import JARS          # path to jar files in this module
 
 class Schema(Text):
 
@@ -14,7 +13,7 @@ class Schema(Text):
     def trang(self, ext='.rng'):
         """use trang to create a schema with the given format extension
         SIDE EFFECT: creates a new file on the filesystem."""
-        trangfn = os.path.join(JARS, 'trang.jar')
+        trangfn = os.path.join(os.path.dirname(__file__), 'lib', 'trang.jar')
         outfn = os.path.splitext(self.fn)[0] + ext
         stderr = tempfile.NamedTemporaryFile()
         try:
