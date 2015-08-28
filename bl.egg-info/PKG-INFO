@@ -10,7 +10,7 @@ Description: # bl
         Black Earth core library
         
 Platform: UNKNOWN
-Classifier: Development Status :: 1 - Alpha
+Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
 Classifier: Programming Language :: Python :: 3.4

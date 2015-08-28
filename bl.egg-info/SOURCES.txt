@@ -1,4 +1,5 @@
 setup.cfg
+setup.py
 bl/__init__.py
 bl/config.py
 bl/dict.py
