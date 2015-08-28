@@ -1,6 +1,6 @@
 
 import lxml.builder
-from beDict import Dict
+from bl.dict import Dict
 
 class ElementMaker(lxml.builder.ElementMaker):
     """Our ElementMaker unpacks lists when it is called, enabling it to work with 

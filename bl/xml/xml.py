@@ -2,9 +2,9 @@
 import os, re, time, sys, subprocess, html, json, tempfile
 from copy import deepcopy
 from lxml import etree
-from beDict import Dict
-from beFile import File
-from beString.id import random_id
+from bl.dict import Dict
+from bl.file import File
+from bl.id import random_id
 from .schema import Schema
 
 class XML(File):

@@ -1,6 +1,6 @@
 
 import urllib.parse
-from beDict import Dict
+from bl.dict import Dict
 
 class URL(Dict):
     """Sample usage:

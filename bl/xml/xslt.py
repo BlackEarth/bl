@@ -1,7 +1,7 @@
 
 from lxml import etree
-from beDict import Dict
-from beString import String
+from bl.dict import Dict
+from bl.string import String
 from .xml import XML
 
 XSL_NAMESPACE = "xmlns:xsl='http://www.w3.org/1999/XSL/Transform'"

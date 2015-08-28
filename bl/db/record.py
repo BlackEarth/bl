@@ -1,8 +1,8 @@
 
 
 import datetime
-from beDict import Dict
-from beString import String
+from bl.dict import Dict
+from bl.string import String
 
 class Record(Dict):
     """A record from the database."""

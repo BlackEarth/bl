@@ -1,7 +1,7 @@
 
 import os, sys, subprocess, time, random, tempfile
 from glob import glob
-from beDict import Dict
+from bl.dict import Dict
 
 """There are other queue libraries; this one implements a simple file-based synchronous queue 
 that is processed at set intervals by the queue process.

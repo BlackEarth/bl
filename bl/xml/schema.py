@@ -1,6 +1,6 @@
 
 import os, re, sys, subprocess, tempfile
-from beFile.text import Text
+from bl.text import Text
 from . import JARS          # path to jar files in this module
 
 class Schema(Text):

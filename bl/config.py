@@ -1,7 +1,7 @@
 
 import os, re
 from configparser import ConfigParser, ExtendedInterpolation
-from beDict import Dict         # needed for dot-attribute notation
+from bl.dict import Dict         # needed for dot-attribute notation
 
 LIST_PATTERN = "^\[\s*([^,]*)\s*(,\s*[^,]*)*,?\s*\]$"
 DICT_ELEM = """(\s*['"].+['"]\s*:\s*[^,]+)"""

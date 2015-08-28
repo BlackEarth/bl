@@ -1,8 +1,8 @@
 # interface to subversion repository
 
 import subprocess, tempfile, sys
-from beDict import Dict
-from beURL import URL
+from bl.dict import Dict
+from bl.url import URL
 
 class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"

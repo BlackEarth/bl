@@ -1,7 +1,7 @@
 
 
 import sys
-from beDict import Dict
+from bl.dict import Dict
 
 class RecordSet(list):
     """A set of database records"""

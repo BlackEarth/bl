@@ -1,7 +1,7 @@
 
 from copy import deepcopy
 from lxml import etree
-from beDict import Dict
+from bl.dict import Dict
 
 class MatchObject(Dict):
     pass

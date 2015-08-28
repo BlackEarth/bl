@@ -1,6 +1,6 @@
 
 import os, subprocess, time
-from beDict import Dict
+from bl.dict import Dict
 
 class File(Dict):
     def __init__(self, fn=None, **args):

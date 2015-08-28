@@ -2,7 +2,7 @@
 A simple relational database interface that stays out of your way.
 Designed to be small, fast, and transparent. Integrates with user-defined record classes.
 
-* Record:     base class for user-defined Record classes (inherits from beDict.Dict)
+* Record:     base class for user-defined Record classes (inherits from bl.dict.Dict)
 * RecordSet:  set of Records (inherits from list)
 * Database :  a database connection
                 (init with a standard DB-API 2.0 connection string)
@@ -10,7 +10,7 @@ Designed to be small, fast, and transparent. Integrates with user-defined record
 ---------------------------------------------------------------------------
                                             Memory:  Footprint:
 # > python                                  4656 K   4656 K (Python 3.4.3 osx)
-# >>> from beDB.database import Database   5460 K    804 K (YMMV)
+# >>> from bl.db.database import Database   5460 K    804 K (YMMV)
 ---------------------------------------------------------------------------
 Sample session: 
 >>> d = Database()      # in-memory sqlite3 database
@@ -24,7 +24,7 @@ Sample session:
 """
 
 import datetime, imp, re, time
-from beDict import Dict
+from bl.dict import Dict
 
 class Database(Dict):
     """a database connection object."""
@@ -218,7 +218,7 @@ class Database(Dict):
                 "select * from information_schema.tables where table_name=%s limit 1", (table_name,))
 
 def doctests():
-    """doctests for the beDB module
+    """doctests for the bl.db module
     >>> d = Database()
     >>> d.execute("create table table1 (name varchar primary key, email varchar not null unique);")
     >>> d.execute("insert into table1 (name, email) values ('sah', 'sah@tyndale.com')")
