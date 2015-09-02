@@ -58,6 +58,8 @@ class SCSS(Text):
         """output css using the Sass processor"""
         from bl.css import CSS
         c = CSS(fn=fn or re.sub("\.scss$", '.css', self.fn))
+        if not os.path.exists(os.path.dirname(c.fn)):
+            os.makedirs(os.path.dirname(c.fn))
         # the following is necessary in order for scss to relative @import
         os.chdir(os.path.dirname(c.fn)) 
         # grumble about the use of bytes rather than unicode.
