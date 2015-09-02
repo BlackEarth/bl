@@ -3,8 +3,8 @@ import os, subprocess, time
 from bl.dict import Dict
 
 class File(Dict):
-    def __init__(self, fn=None, **args):
-        Dict.__init__(self, fn=fn, **args)
+    def __init__(self, fn=None, log=print, **args):
+        Dict.__init__(self, fn=fn, log=log, **args)
 
     def __repr__(self):
         return "%s(fn=%r)" % (
