@@ -5,10 +5,10 @@ from lxml import etree
 from bl.dict import Dict
 from bl.file import File
 from bl.id import random_id
+from bl.string import String
 from .schema import Schema
 
 class XML(File):
-    ROOT_TAG = 'xml'
 
     def __init__(self, fn=None, root=None, tree=None, parser=None, encoding='UTF-8', schema_path=None, **args):
         File.__init__(self, fn=fn, root=root, info=None, parser=parser, schema_path=schema_path, **args)
@@ -24,10 +24,10 @@ class XML(File):
             tree = etree.parse(fn, parser=parser)
             self.root = tree.getroot()
             self.info = self.get_info(tree=tree)
-        elif self.ROOT_TAG is not None:                         # default to a new root element
+        elif self.ROOT_TAG is not None:
             self.root = etree.Element(self.ROOT_TAG)
         else:
-            self.root = etree.Element(self.__class__.__name__.lower())
+            self.root = etree.Element(String(self.__class__.__name__).identifier(camelsplit=True).lower())
 
         # set up document info (based on tree.docinfo)
         if self.info is None:
@@ -46,6 +46,22 @@ class XML(File):
         else:
             return Dict()
 
+    def path(self):
+        return os.path.dirname(os.path.abspath(self.fn))
+
+    @classmethod
+    def xpath(C, node, path, namespaces=None, extensions=None, smart_strings=True, **args):
+        """shortcut to Element.xpath()"""
+        return node.xpath(path, namespaces=namespaces, extensions=extensions, smart_strings=smart_strings, **args)
+
+    @classmethod
+    def find(C, node, path, namespaces=None, extensions=None, smart_strings=True, **args):
+        """use Element.xpath() rather than Element.find() in order to normalize the interface"""
+        xp = node.xpath(path, namespaces=namespaces, extensions=extensions, smart_strings=smart_strings, **args)
+        if len(xp) > 0:
+            return xp[0]
+
+
     def write(self, fn=None, root=None, encoding=None, doctype=None, 
             xml_declaration=True, pretty_print=True, with_comments=True):
         data = self.tobytes(root=root or self.root, 
@@ -58,7 +74,8 @@ class XML(File):
     def tobytes(self, root=None, encoding=None, doctype=None, 
             xml_declaration=True, pretty_print=True, with_comments=True):
         """return the content of the XML document as a byte string suitable for writing"""
-        return etree.tostring(root or self.root, 
+        if root is None: root = self.root
+        return etree.tostring(root, 
                 encoding=encoding or self.info.encoding or 'UTF-8',
                 doctype=doctype or self.info.doctype, 
                 xml_declaration=xml_declaration, 
@@ -173,8 +190,7 @@ class XML(File):
         if fn is None: fn = self.fn
         return DocClass(
                 root=transformer.Element(elem, xml=self, fn=fn, **params),
-                fn=fn,
-                config=self.config)
+                fn=fn)
 
     # == AUDITING == 
 
