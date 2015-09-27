@@ -29,17 +29,18 @@ from bl.dict import Dict
 class Database(Dict):
     """a database connection object."""
 
-    def __init__(self, connection_string=None, dba=None, tries=3, dbconfig=None, debug=False, **args):
+    def __init__(self, connection_string=None, dba=None, tries=3, debug=False, log=print, **args):
         Dict.__init__(self, 
-            connection_string=connection_string or (dbconfig and dbconfig.connection_string) or '', 
+            connection_string=connection_string or '', 
             dba=dba or imp.load_module('sqlite3', *imp.find_module('sqlite3')), 
-            dbconfig=dbconfig, 
-            DEBUG=debug or (dbconfig and dbconfig.debug) or None,
-            **args)
+            DEBUG=debug, tries=tries, log=log, **args)
         if self.dba is None:
-            import sqlite3 as dba
+            import sqlite3
+            self.dba = sqlite3
         elif type(self.dba) in (str, bytes):
-            self.dba = imp.load_module(imp.find_module(dba), fm[0], fm[1], fm[2])
+            fm = imp.find_module(dba)
+            self.dba = imp.load_module(self.dba, fm[0], fm[1], fm[2])
+
         if self.dba.__name__ == 'psycopg2':
             # make psycopg2 always return unicode strings
             try:
@@ -75,6 +76,8 @@ class Database(Dict):
 
     def execute(self, sql, vals=None, cursor=None):
         """execute SQL transaction, commit it, and return nothing. If a cursor is specified, work within that transaction."""
+        if self.debug==True:
+            self.log(sql)
         try:
             c = cursor or self.connection.cursor()
             if vals in [None, (), [], {}]:

@@ -1,5 +1,5 @@
 
-import os
+import os, time
 from glob import glob
 from bl.model import Model
 
@@ -23,7 +23,7 @@ class Migration(Model):
         fns = [fn for fn 
                 in glob(os.path.join(migrations_path, "*.*")) 
                 if M.create_id(fn) not in migrations_ids]
-        log("[%s]" % log.timestamp(), "Migrate Database: %d migrations" % len(fns))
+        log("[%s]" % time.strftime("%Y-%m-%d %H:%M:%S"), "Migrate Database: %d migrations" % len(fns))
         for fn in fns:
             id = M.create_id(fn)
             ext = os.path.splitext(fn)[1]
