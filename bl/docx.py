@@ -41,7 +41,7 @@ class DOCX(ZIP):
         'rels':  "http://schemas.openxmlformats.org/package/2006/relationships",
 
         # xhtml namespace needed here for certain uses.
-        'h': "http://www.w3.org/1999/xhtml",
+        'html': "http://www.w3.org/1999/xhtml",
     })
 
     def tempfile(self):
