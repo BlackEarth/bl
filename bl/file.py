@@ -4,6 +4,7 @@ from bl.dict import Dict
 
 class File(Dict):
     def __init__(self, fn=None, log=print, **args):
+        if type(fn)==str: fn=fn.strip().replace('\\ ', ' ')
         Dict.__init__(self, fn=fn, log=log, **args)
 
     def __repr__(self):
@@ -17,6 +18,22 @@ class File(Dict):
         with open(self.fn, mode) as f: 
             data=f.read()
         return data
+
+    def dirpath(self):
+        return os.path.dirname(os.path.abspath(self.fn))
+
+    def basename(self):
+        return os.path.basename(self.fn)
+
+    def ext(self):
+        return os.path.splitext(self.fn)[1]
+
+    def relpath(self, dirpath=None):
+        return os.path.relpath(self.fn, dirpath or self.dirpath()).replace('\\','/')
+
+    def mimetype(self):
+        from mimetypes import guess_type
+        return guess_type(self.fn)[0]
 
     def tempfile(self, mode='wb', **args):
         "write the contents of the file to a tempfile and return the tempfile filename"
