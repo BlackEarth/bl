@@ -45,26 +45,27 @@ class SCSS(Text):
     # it happens to result in things being ordered correctly (with @-rules first), and 
     # it allows us to effectively query and manipulate the contents of the stylesheet at any time.
 
-    def __init__(self, fn=None, **args):
-        # **NOTE: add parsing of text input into self.styles**
-        Text.__init__(self, fn=fn, **args)
+    def __init__(self, **args):
+        # TODO: add parsing of text input into self.styles
+        Text.__init__(self, **args)
         if self.styles is None:
             self.styles = Styles()
 
-    def write(self, fn=None):
-        Text.write(self, fn=fn, text=self.render(self.styles))
+    def write(self, fn=None, text=None, **args):
+        Text.write(self, fn=fn, text=text, **args)
 
     def render_css(self, fn=None, text=None):
         """output css using the Sass processor"""
         from bl.css import CSS
-        c = CSS(fn=fn or re.sub("\.scss$", '.css', self.fn))
+        c = CSS(fn=fn or os.path.splitext(self.fn)[0]+'.css')
         if not os.path.exists(os.path.dirname(c.fn)):
             os.makedirs(os.path.dirname(c.fn))
         # the following is necessary in order for scss to relative @import
         os.chdir(os.path.dirname(c.fn)) 
         # grumble about the use of bytes rather than unicode.
         b = bytes(text or self.text or self.render(self.styles), 'utf-8') 
-        c.text = sass.compile(string=b)
+        if len(b)==0: c.text = ''
+        else: c.text = sass.compile(string=b)
         return c
     
     @classmethod    
@@ -80,9 +81,8 @@ class SCSS(Text):
                         indent=indent) 
                     + '}')
 
-        s = ""
-
         # render the scss text
+        s = ""
         for k in styles.keys():
             if DEBUG==True: print(margin, k, styles[k])
             s += margin + k + ' '
