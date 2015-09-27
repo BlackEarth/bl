@@ -6,6 +6,18 @@ DEBUG=False
 
 class Image(File):
 
+    def convert(self, outfn=None, img_args=[]):
+        """convert the image to the outfn, with the given img args"""
+        if outfn is None: outfn=self.fn
+        if not os.path.exists(os.path.dirname(outfn)):
+            os.makedirs(os.path.dirname(outfn))
+        gm = self.gm or 'gm'
+        args = [gm, 'convert'] + img_args + [self.fn, outfn]
+        if DEBUG==True: self.log('Image.convert(): ', args)
+        o = subprocess.check_output(args).decode('utf8')
+        if o != '': self.log(o)
+        return outfn
+
     def mogrify(self, outfn=None, overwrite=True, format=None, quality=80, jpg_matte=4, jpg_format=1, 
                 width=None, height=None, maxwh=2048, maxw=None, maxh=None, maxpixels=3.2e6, scale=1, res=300, 
                 resample_method=4, orient=None, alpha=None):
