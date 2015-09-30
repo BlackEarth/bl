@@ -17,6 +17,7 @@ class Migration(Model):
         migrations_path = migrations_path or db.config.Database.migrations
         try:
             # will throw an error if this is the first migration -- migrations table doesn't yet exist.
+            # (and this approach is a bit easier than querying for the existence of the table...)
             migrations_ids = [r.id for r in M(db).select()]
         except:
             migrations_ids = []
