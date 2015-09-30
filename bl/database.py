@@ -106,31 +106,40 @@ class Database(Dict):
             vals: any bound variables
             Record: the class (itself) that the resulting records should be
         """
+        if Record is None:
+            from .record import Record
+        if RecordSet is None:
+            from .recordset import RecordSet
+
+        records = RecordSet()                   # Populate a RecordSet (list) with the all resulting
+        for record in self.selectgen(sql, vals=vals, Record=Record, cursor=cursor):
+            records.append(record)
+        return records
+
+    def selectgen(self, sql, vals=None, Record=None, cursor=None):
+        """select from db and yield a generator"""
         if self.DEBUG == True: print("==SELECT:==\n", sql)
         c = cursor or self.cursor()
         self.execute(sql, vals=vals, cursor=c)
 
         if Record is None:
             from .record import Record
-        if RecordSet is None:
-            from .recordset import RecordSet
 
         # get a list of attribute names from the cursor.description
         attr_list = list()
         for r in c.description:
             attr_list.append(r[0])
 
-        records = RecordSet()                   # Populate a RecordSet (list) with the all resulting
-        results = c.fetchall()
-        for result in results:
+        result = c.fetchone()
+        while result is not None:
             record = Record(self)               # whatever the record class is, include another instance
             for i in range(len(attr_list)):     # make each attribute dict-able by name
                 record[attr_list[i]] = result[i]
-            records.append(record)                 # append the instance to the RecordSet
+            yield record
+            result = c.fetchone()
 
         if cursor is None:
             c.close()   # closing the cursor without committing rolls back the transaction.
-        return records
 
     def select_one(self, sql, vals=None, Record=None, cursor=None):
         """select one record from db
