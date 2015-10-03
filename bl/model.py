@@ -167,8 +167,7 @@ class Model(Record):
             self[cache_field] = self.db.select(sql, Record=to_class)
         return self[cache_field]        
 
-    def select(self, attr='*', from_expr=None, where="", vals=None, orderby="", limit=None, offset=0, cursor=None, **kwargs):
-        """select records from relation"""
+    def prepare_query(self, attr='*', from_expr=None, where="", vals=None, orderby="", limit=None, offset=0, **kwargs):
         if from_expr is None: from_expr = self.relation
         if limit not in [0, None] and self.db.servername() == 'sqlserver':
             sql = "select top %d %s from %s" % (limit, attr, from_expr)
@@ -189,32 +188,32 @@ class Model(Record):
                 sql += " offset %d " % offset
             elif type(offset) in [str, str] and re.match("[0-9]+", offset) is not None:
                 sql += " offset %s " % offset
+        return sql
 
-        # select and return the records
-        return self.db.select(sql, vals=vals, Record=self.__class__, cursor=cursor)
+    def selectgen(self, attr='*', from_expr=None, where="", vals=None, orderby="", limit=None, offset=0, cursor=None, **kwargs):
+        """select records from relation"""
+        sql = self.prepare_query(attr=attr, from_expr=from_expr, where=where, vals=vals, orderby=orderby, limit=limit, offset=offset, **kwargs)
+        results = self.db.selectgen(sql, vals=vals, Record=self.__class__, cursor=cursor)
+        for result in results:
+            result.after_select()
+            yield result
+
+    def select(self, attr='*', from_expr=None, where="", vals=None, orderby="", limit=None, offset=0, cursor=None, **kwargs):
+        """select records from relation"""
+        sql = self.prepare_query(attr=attr, from_expr=from_expr, where=where, vals=vals, orderby=orderby, limit=limit, offset=offset, **kwargs)
+        results = self.db.selectgen(sql, vals=vals, Record=self.__class__, cursor=cursor)
+        for result in results:
+            result.after_select()
+        return results
 
     def select_one(self, attr='*', from_expr=None, where="", vals=None, orderby="", offset=0, cursor=None, **kwargs):
         """select one record from relation"""
-        if from_expr is None: from_expr = self.relation
-        if self.db.servername == 'sqlserver':
-            sql = "select top 1 %s from %s" % (attr, from_expr)
-        else:
-            sql = "select %s from %s" % (attr, from_expr)
-        if where not in ['', None] or len(kwargs)>0: 
-            sql += " where %s " % self.where_from_args(where, **kwargs)
-            
-        if orderby != "":
-            sql += " order by %s " % orderby
-        else:       # default to using pk for orderby
-            sql += " order by %s " % ",".join(self.pk)
-            
-        if offset != 0 and type(offset) == int:
-            sql += " offset %d " % offset
-        if self.db.servername() != 'sqlserver':
-            sql += ' limit 1 '
-            
-        # select and return the records
-        return self.db.select_one(sql, vals=vals, Record=self.__class__, cursor=cursor)
+        results = self.selectgen(attr=attr, from_expr=from_expr, where=where, vals=vals, orderby=orderby, limit=1, offset=offset, **kwargs)
+        try:
+            result = results.__next__()
+        except StopIteration:
+            result = None
+        return result
 
     def select_as_dict(self, attr='*', from_expr=None, where="", vals=None, orderby="", cursor=None, **kwargs):
         """returns the SELECT results as a dict, with the keys being tuples of the model's pk."""
@@ -256,31 +255,27 @@ class Model(Record):
         for k in list(kwargs.keys()): self[k] = kwargs[k]
         self.before_insert_or_update()
         self.before_insert()
-        keys = re.sub("\{[^\}]*\}", "", ', '.join(list(self.keys())))    # remove any {namespace} prefix from keys
-        vals = ', '.join([self.quote(k) for k in list(self.values())])   # quote all values according to type
-        if 'postgres' in self.db.servername().lower():         # postgresql: "returning" clause on the insert statement
-            if reload==True:
-                d = self.db.select_one("insert into %s (%s) values (%s) returning *" % (self.relation, keys, vals), cursor=cursor)
-                for k in list(d.keys()): self[k] = d[k]
-            else:
-                self.db.execute("insert into %s (%s) values (%s)" % (self.relation, keys, vals), cursor=cursor)
-        else:                                               # other databases: no "returning" clause
-            self.db.execute("insert into %s (%s) values (%s)" % (self.relation, keys, vals), cursor=cursor)
-            if reload==True:
-                if 'sqlite' in self.db.servername().lower():   # sqlite: last_insert_rowid()
-                    d = self.db.select_one("select * from %s where ROWID=last_insert_rowid()" % self.relation)
-                elif None not in [self.get(k) for k in self.pk]:    # local pk is filled
-                    whereargs = {}
-                    for k in self.pk:
-                        whereargs[k] = self.get(k)
-                    wherecl = self.where_from_args(**whereargs)
-                    d = self.db.select_one("select * from %s where %s" % (self.relation, wherecl))
-                for k in list(d.keys()): self[k] = d[k]
+        keys = self.keys()
+        vals = self.values()
+        q = "insert into %s (%s) values (%s)" % (
+                self.relation, ','.join(keys), ','.join(["%s" for v in vals]))
+        if 'postgres' in self.db.servername().lower(): 
+            q += " returning *"
+        d = self.db.select_one(q, vals=vals, cursor=cursor)
+        if reload==True:
+            if 'sqlite' in self.db.servername().lower():
+                d = self.db.select_one("select * from %s where ROWID=last_insert_rowid()" % self.relation)
+            elif None not in [self.get(k) for k in self.pk]:    # local pk is filled
+                whereargs = {}
+                for k in self.pk:
+                    whereargs[k] = self.get(k)
+                wherecl = self.where_from_args(**whereargs)
+                d = self.db.select_one("select * from %s where %s" % (self.relation, wherecl))
+            for k in list(d.keys()): self[k] = d[k]
         if cursor is None:
             self.db.commit()
         self.after_insert()
         self.after_insert_or_update()
-
 
     def insert_safe(self, cursor=None, **args):
         try:
@@ -385,6 +380,7 @@ class Model(Record):
     def after_update(self): pass    
     def before_delete(self): pass        
     def after_delete(self): pass
+    def after_select(self): pass
 
 
 if __name__ == "__main__":
