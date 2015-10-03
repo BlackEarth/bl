@@ -265,7 +265,8 @@ class Model(Record):
         if reload==True:
             if 'sqlite' in self.db.servername().lower():
                 d = self.db.select_one("select * from %s where ROWID=last_insert_rowid()" % self.relation)
-            elif None not in [self.get(k) for k in self.pk]:    # local pk is filled
+            elif 'postgres' not in self.db.servername().lower() \
+            and None not in [self.get(k) for k in self.pk]:    # local pk is filled
                 whereargs = {}
                 for k in self.pk:
                     whereargs[k] = self.get(k)
