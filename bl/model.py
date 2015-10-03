@@ -201,9 +201,11 @@ class Model(Record):
     def select(self, attr='*', from_expr=None, where="", vals=None, orderby="", limit=None, offset=0, cursor=None, **kwargs):
         """select records from relation"""
         sql = self.prepare_query(attr=attr, from_expr=from_expr, where=where, vals=vals, orderby=orderby, limit=limit, offset=offset, **kwargs)
-        results = self.db.selectgen(sql, vals=vals, Record=self.__class__, cursor=cursor)
-        for result in results:
+        records = self.db.selectgen(sql, vals=vals, Record=self.__class__, cursor=cursor)
+        results = []
+        for result in records:
             result.after_select()
+            results.append(result)
         return results
 
     def select_one(self, attr='*', from_expr=None, where="", vals=None, orderby="", offset=0, cursor=None, **kwargs):
