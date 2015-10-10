@@ -1,5 +1,5 @@
 
-import os
+import os, sys
 
 class Log:
     "log file, which appends to the file rather than reading"
