@@ -33,7 +33,7 @@ class Migration(Model):
             else:
                 f = open(fn, 'r'); script = f.read(); f.close()
                 description = script.split("\n")[0].strip('-#/*; ') # first line is the description
-                log(' ', id+ext, ':', description)
+                log('', id+ext, ':', description)
                 cursor = db.cursor()
                 if ext=='.sql':                                     # script is a SQL script, db.execute it
                     db.execute(script, cursor=cursor)
@@ -43,3 +43,4 @@ class Migration(Model):
                 migration.insert(cursor=cursor)
                 cursor.connection.commit()
                 cursor.close()
+

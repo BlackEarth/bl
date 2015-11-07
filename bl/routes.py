@@ -7,14 +7,15 @@ import sys  # for sys.version
 from bl.dict import Dict
 
 # patterns used in routing requests
-Patterns = {'int': r'[0-9]+',                           # int: integer
-            'dec': r'[0-9\.,]+',                        # dec: decimal
-            'path': r'[\w\$\-\_\.\+\!\*\(\)\,/]+',      # path: anything legal in a path
-            'slug': r'[\w\$\-\_\.\+\!\*\(\)\, %%]+',    # slug: a part of a url between /
-            'word': r'[\w\-]+',                         # word: starts with letter or _ or -, + word chars
-            'name': r'[a-zA-Z][a-zA-Z0-9_]+',           # name: starts with letter, then letter, number, or _
-            'hex': '[0-9a-f]+',
-           }
+Patterns = Dict(**{
+    'int': r'[0-9]+',                           # int: integer
+    'dec': r'[0-9\.,]+',                        # dec: decimal
+    'path': r'[\w\$\-\_\.\+\!\*\(\)\,/]+',      # path: anything legal in a path
+    'slug': r'[\w\$\-\_\.\+\!\*\(\)\, %%]+',    # slug: a part of a url between /
+    'word': r'[\w\-]+',                         # word: starts with letter or _ or -, + word chars
+    'name': r'[a-zA-Z_][a-zA-Z0-9_]+',          # name: starts with letter or _, then letter, number, or _
+    'hex': r'[0-9a-f]+',                        # hex: hexidecimal number
+    })
 
 class RouteMap(list):
     """Provides a mapping structure for matching URLs to handling facilities.
