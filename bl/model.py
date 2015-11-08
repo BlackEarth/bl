@@ -259,11 +259,17 @@ class Model(Record):
         self.before_insert()
         keys = self.keys()
         vals = self.values()
+        if 'postgres' in self.db.servername().lower():
+            vals_markers = ["%s" for v in vals]
+        else:
+            vals_markers = ["?" for v in vals]
         q = "insert into %s (%s) values (%s)" % (
-                self.relation, ','.join(keys), ','.join(["%s" for v in vals]))
+                self.relation, ','.join(keys), ','.join(vals_markers))
         if 'postgres' in self.db.servername().lower(): 
             q += " returning *"
-        d = self.db.select_one(q, vals=vals, cursor=cursor)
+            d = self.db.select_one(q, vals=vals, cursor=cursor)
+        else:
+            d = self.db.execute(q, vals=vals, cursor=cursor)
         if reload==True:
             if 'sqlite' in self.db.servername().lower():
                 d = self.db.select_one("select * from %s where ROWID=last_insert_rowid()" % self.relation)

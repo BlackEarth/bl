@@ -29,7 +29,7 @@ class FileStorage(SessionStorage):
     >>> s3 == {} and s3.id != s.id and s3.id != None
     True
     """
-    def __init__(self, directory, **args):
+    def __init__(self, directory=''):
         self.directory = os.path.abspath(directory)
         if not os.path.exists(self.directory): os.makedirs(self.directory)
         if not os.path.isdir(self.directory): raise ValueError("File '%s' exists but is not a directory" % directory)

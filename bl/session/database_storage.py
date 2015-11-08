@@ -1,11 +1,14 @@
 
-DEBUG = False
-
 import json
+from bl.session import Session, MemoryStorage
+from bl.database import Database
+from bl.model import Model
 
-from bl.session import Session, SessionStorage
+class SessionModel(Model):
+    relation = 'sessions'
+    pk = ['id']
 
-class DatabaseStorage(SessionStorage):
+class DatabaseStorage(MemoryStorage):
     """Database storage of sessions.
         init with a DB-API 2.0 db connection.
 
@@ -13,7 +16,7 @@ class DatabaseStorage(SessionStorage):
     >>> from bl.database import Database
     >>> db = Database()                             
     >>> db.execute('''create table sessions (id varchar primary key, data text)''')
-    >>> st = DatabaseStorage(db.connection)
+    >>> st = DatabaseStorage(db)
     >>> s = Session(st, name='sah')
     >>> s
     {'name': 'sah'}
@@ -33,47 +36,37 @@ class DatabaseStorage(SessionStorage):
     >>> db.execute("drop table sessions")
     """
 
-    def __init__(self, dbconn, table='sessions', idfield='id', datafield='data', **args):
-        self.dbconn = dbconn
-        self.table = table
-        self.idfield = idfield
-        self.datafield = datafield
+    def __init__(self, db=None, session_model=SessionModel):
+        if db is None:
+            db = Database()
+            db.execute("""create table sessions (id varchar primary key, data text)""")
+        self.db = db
+        self.SessionModel = session_model
 
-    def load(self, sessionid=None):
-        c = self.dbconn.cursor()
-        c.execute("select %s from %s where %s='%s' limit 1" % (self.datafield, self.table, self.idfield, sessionid))
-        res = c.fetchone()
-        c.close()
-        if res:
-            sdata = json.loads(res[0])
+    def load(self, session_id=None):
+        record = self.SessionModel(self.db).select_one('data', id=session_id)
+        if record is not None:
+            sdata = json.loads(record.data)
             s = Session(self)
             s.update(**sdata)
-            s.id = sessionid
+            s.id = session_id
             return s
         else:
             return Session(self)
 
     def save(self, session):
-        sdata = json.dumps(session)
-        c = self.dbconn.cursor()
-        try:
-            c.execute("delete from %s where %s='%s'" % (self.table, self.idfield, session.id))
-            c.execute("insert into %s (%s, %s) values ('%s', '%s')" % (self.table, self.idfield, self.datafield, session.id, sdata))
-            self.dbconn.commit()
-        except:
-            self.dbconn.rollback()
-            raise
-        c.close()
+        r = self.SessionModel(self.db).select_one(id=session.id) 
+        if r is not None:
+            r.data = json.dumps(session)
+            r.update(reload=False)
+        else:
+            r = self.SessionModel(self.db, id=session.id, data=json.dumps(session))
+            r.insert(reload=False)
 
-    def delete(self, sessionid):
-        c = self.dbconn.cursor()
-        try:
-            c.execute("delete from %s where %s='%s'" % (self.table, self.idfield, sessionid))
-            self.dbconn.commit()
-        except:
-            self.dbconn.rollback()
-            raise
-        c.close()
+    def delete(self, session_id):
+        r = self.SessionModel(self.db).select_one(id=session_id)
+        if r is not None:
+            r.delete()
 
 
 if __name__ == "__main__":
