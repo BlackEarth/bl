@@ -3,8 +3,8 @@
 # ---------------------------------------------------------------------------
 # $Id: session.py 13 2014-05-17 22:42:48Z sah $
 
-"""== Session and SessionStorage classes == 
-SessionStorage  : Base class, stores sessions in a dict in memory. VERY fast, but non-persistent.
+"""== Session and MemoryStorage classes == 
+MemoryStorage   : Base class, stores sessions in a dict in memory. VERY fast, but non-persistent.
 FileStorage     : Stores sessions in a filesystem directory. Fast, persistent. Needs periodic cleanup.
 DatabaseStorage : Stores sessions in a table in database. Fast, persistent. Needs periodic cleanup.
 CookieStorage   : Stores sessions in the client's cookie, uses symmetric encryption. A bit slow.
@@ -35,7 +35,7 @@ class Session(dict):
         Session.load(storage, id) : load the indicated session from storage.
                                     if it doesn't exist in storage, returns a new session
     Example:
-    >>> storage = SessionStorage()              # new container for sessions
+    >>> storage = MemoryStorage()              # new container for sessions
     >>> s = Session.load(storage)               # new session
     >>> s['name'] = 'amp'                       # set a value
     >>> s.save()                                # save the session in storage
@@ -58,6 +58,28 @@ class Session(dict):
         # keep it simple but still pretty secure and guaranteed unique
         key = bytes("%s%.17f%.17f" % (time(), random(), random()), encoding='ascii')
         return urlsafe_b64encode(key).decode().strip('=')[12:]
+
+    @classmethod
+    def init_storage(cls, storage='MemoryStorage', db=None, **params):
+        "load and return the storage object that is indicated by the name and params"
+        if storage == 'MemoryStorage':              # no params needed
+            session_storage = MemoryStorage()
+        elif storage == 'DatabaseStorage':          # params init the database
+            from .database_storage import DatabaseStorage
+            from bl.database import Database
+            if db is None:
+                db = Database(**params)
+            session_storage = DatabaseStorage(db=db)
+        elif storage == 'MemcacheStorage':
+            from .memcache_storage import MemcacheStorage
+            session_storage = MemcacheStorage(**params)
+        elif storage == 'CookieStorage':
+            from .cookie_storage import CookieStorage
+            session_storage = CookieStorage(**params)
+        elif storage == 'FileStorage':
+            from .file_storage import FileStorage
+            session_storage = FileStorage(**params)
+        return session_storage
 
     @classmethod
     def load(cls, storage, id=None, **args):
@@ -83,10 +105,10 @@ class Session(dict):
 
 # ---------------------------------------------------------------------------
 
-class SessionStorage(dict):
+class MemoryStorage(dict):
     """A storage container for sessions. This base class implements memory storage.
     Example:
-    >>> st = SessionStorage()
+    >>> st = MemoryStorage()
     >>> s = Session(st, name='sah')
     >>> s.get('name')
     'sah'
@@ -106,7 +128,7 @@ class SessionStorage(dict):
     """
 
     def init_session(self, session_id=None, session_class=Session, **args):
-        """returns a Session object initialized with self as SessionStorage and **args as keys.
+        """returns a Session object initialized with self as MemoryStorage and **args as keys.
         If session_id is given and exists in storage, that session is returned.
         """
         s = Session.load(self, session_id)
