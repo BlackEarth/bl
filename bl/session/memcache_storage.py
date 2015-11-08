@@ -30,8 +30,8 @@ class MemcacheStorage(SessionStorage):
     True
     """
 
-    def __init__(self, serverlocation='127.0.0.1:11211'):
-        self.client = memcache.Client([serverlocation])
+    def __init__(self, memcache_server='127.0.0.1:11211'):
+        self.client = memcache.Client([memcache_server])
 
     def load(self, sessionid=None):
         session = Session(self)

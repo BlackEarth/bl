@@ -60,25 +60,26 @@ class Session(dict):
         return urlsafe_b64encode(key).decode().strip('=')[12:]
 
     @classmethod
-    def init_storage(cls, storage='MemoryStorage', db=None, **params):
+    def init_storage(cls, config, db=None):
         "load and return the storage object that is indicated by the name and params"
+        storage = config.Session.storage
         if storage == 'MemoryStorage':              # no params needed
             session_storage = MemoryStorage()
         elif storage == 'DatabaseStorage':          # params init the database
             from .database_storage import DatabaseStorage
-            from bl.database import Database
             if db is None:
-                db = Database(**params)
+                from bl.database import Database
+                db = Database(**(config.Database or {}))    # default in-memory Database
             session_storage = DatabaseStorage(db=db)
         elif storage == 'MemcacheStorage':
             from .memcache_storage import MemcacheStorage
-            session_storage = MemcacheStorage(**params)
+            session_storage = MemcacheStorage(memcache_server=config.Session.memcache_server)
         elif storage == 'CookieStorage':
             from .cookie_storage import CookieStorage
-            session_storage = CookieStorage(**params)
+            session_storage = CookieStorage(config.Session.cookie_key)
         elif storage == 'FileStorage':
             from .file_storage import FileStorage
-            session_storage = FileStorage(**params)
+            session_storage = FileStorage(directory=config.Session.storage_directory)
         return session_storage
 
     @classmethod

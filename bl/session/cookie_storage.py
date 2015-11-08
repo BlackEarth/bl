@@ -36,12 +36,12 @@ class CookieStorage(SessionStorage):
         self.key = key
         self.cipher = AES.new(self.key, keySize=len(key))
 
-    def load(self, sessionid=None):
-        # with a cookie session, the sessionid is actually the encrypted data for the session
+    def load(self, session_id=None):
+        # with a cookie session, the session_id is actually the encrypted data for the session
         session = Session(self)
-        if sessionid:
+        if session_id:
             try:
-                sdata = self.__decrypt(sessionid)
+                sdata = self.__decrypt(session_id)
             except:
                 sdata = {}
             session.update(**sdata)
@@ -51,14 +51,14 @@ class CookieStorage(SessionStorage):
     def save(self, session):
         session.id = self.__encrypt(session)
 
-    def delete(self, sessionid, **args):
+    def delete(self, session_id, **args):
         pass
 
     def __encrypt(self, session):
         return urlsafe_b64encode(self.cipher.encrypt(json.dumps(session)))
 
-    def __decrypt(self, sessionid):
-        return json.loads(self.cipher.decrypt(urlsafe_b64decode(sessionid)))
+    def __decrypt(self, session_id):
+        return json.loads(self.cipher.decrypt(urlsafe_b64decode(session_id)))
 
     @classmethod
     def make_key(cls, keySize=32):
