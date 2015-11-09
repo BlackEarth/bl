@@ -29,11 +29,11 @@ from bl.dict import Dict
 class Database(Dict):
     """a database connection object."""
 
-    def __init__(self, connection_string=None, dba=None, tries=3, debug=False, log=print, **args):
+    def __init__(self, connection_string=None, dba=None, tries=3, DEBUG=False, log=print, **args):
         Dict.__init__(self, 
             connection_string=connection_string or '', 
             dba=dba or imp.load_module('sqlite3', *imp.find_module('sqlite3')), 
-            DEBUG=debug, tries=tries, log=log, **args)
+            DEBUG=DEBUG, tries=tries, log=log, **args)
         if self.dba is None:
             import sqlite3
             self.dba = sqlite3
@@ -76,7 +76,7 @@ class Database(Dict):
 
     def execute(self, sql, vals=None, cursor=None):
         """execute SQL transaction, commit it, and return nothing. If a cursor is specified, work within that transaction."""
-        if self.debug==True:
+        if self.DEBUG==True:
             self.log(sql)
         try:
             c = cursor or self.connection.cursor()
