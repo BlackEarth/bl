@@ -4,20 +4,12 @@ import os, sys
 class Log:
     "log file, which appends to the file rather than reading"
 
-    def __init__(self, fn, mode='a', echo=False):
+    def __init__(self, fn=None, echo=False):
         self.fn = fn
-        self.mode = mode
         self.echo = echo
-        if 'w' in mode:
-            f = self.open(mode=model)
-            self.close(f)
 
     def write(self, string):
-        f = self.open(mode=self.mode or 'a')
-        f.write(string)
-        f.close()
-        if self.echo==True: 
-            print(string,end='')
+        self.__call__(string, end='')
 
     def __call__(self, *args, sep=' ', end='\n'):
         f = self.open()
@@ -31,7 +23,7 @@ class Log:
         if fn is not None:
             if not os.path.exists(os.path.dirname(fn)):
                 os.makedirs(os.path.dirname(fn))
-            f = open(fn, self.mode or 'a')
+            f = open(fn, 'a')
         else:
             f = sys.stdout
         return f 
