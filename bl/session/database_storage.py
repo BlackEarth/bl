@@ -54,9 +54,13 @@ class DatabaseStorage(MemoryStorage):
             return Session(self)
 
     def save(self, session):
-        r = self.SessionModel(self.db).select_one(id=session.id) or self.SessionModel(self.db)
-        r.data = json.dumps(session)
-        r.insert_or_update()
+        r = self.SessionModel(self.db).select_one(id=session.id) 
+        if r is not None:
+            r.data = json.dumps(session)
+            r.commit()
+        else:
+            r = self.SessionModel(self.db, id=session.id, data=json.dumps(session))
+            r.insert()
 
     def delete(self, session_id):
         r = self.SessionModel(self.db).select_one(id=session_id)
