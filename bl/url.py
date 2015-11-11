@@ -67,7 +67,9 @@ class URL(Dict):
     def __str__(self):
         pr = (self.scheme, self.host, self.path,
             self.params, self.qstring(), self.fragment)
-        return urllib.parse.urlunparse(pr)
+        s = urllib.parse.urlunparse(pr)
+        if s[:2]=='//': s = s[2:]       # strip an empty protocol separator from beginning
+        return s
 
     def quoted(self):
         pr = (self.scheme, self.host, urllib.parse.quote(self.path),
