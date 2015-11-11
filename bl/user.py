@@ -44,6 +44,25 @@ class User(Model):
                 return errors
         # if no errors, returns None
 
+    def authenticate(self, email, password, unverified=False):
+        """Authenticate the login against the database."""
+        user = self.select_one(where="email ilike %s", vals=[email])   # case-insensitive and secure
+        if (user is not None
+            and user.pop('pwd') == user.encrypt_password(password, user.pop('salt')) # pop pwd & salt
+            and (user.verified or unverified)):
+                if self.db.DEBUG==True: self.db.log(user.email, " ==> authentication successful")
+                return user
+
+    def set_password(self, passwd, errors=[]):
+        """sets the user's password."""
+        C = self.__class__
+        pwd_errors = C.password_errors(passwd)
+        if pwd_errors!=[]:
+            raise ValueError("password is not valid: %s" % '. '.join(pwd_errors))
+        else:
+            self.salt = self.make_salt()
+            self.pwd = self.encrypt_password(passwd, self.salt)
+    
     # override base class insert() and update() to ensure that email is valid
     def insert(self, **args):
         C = self.__class__
@@ -78,33 +97,6 @@ class User(Model):
         C = self.__class__
         self.db.execute("update %s set verified=now() where email=%s" % (C.relation, self.quote(self.email)))
         self = self.reload()
-
-    # -- authentication stuff --
-
-    def set_password(self, passwd, errors=[]):
-        """sets the user's password."""
-        C = self.__class__
-        pwd_errors = C.password_errors(passwd)
-        if pwd_errors!=[]:
-            raise ValueError("password is not valid: %s" % '. '.join(pwd_errors))
-        else:
-            self.salt = self.make_salt()
-            self.pwd = self.encrypt_password(passwd, self.salt)
-    
-    def authenticate(self, email, password, unverified=False):
-        """Authenticate the login against the database."""
-        user = self.select_one(where="email ~* %s" % self.quote(email)) # case-insensitive and secure
-        if self.db.DEBUG==True: 
-            self.db.log("User.authenticate('%s', '%s')" % (email, password))
-            self.db.log("  user:", user and user.email)
-            self.db.log("  pwd :", user.pwd)
-            self.db.log("  crpt:", user.encrypt_password(password, user.salt))
-            self.db.log("  ver.:", user.verified or unverified)
-        if (user is not None
-            and user.pwd == user.encrypt_password(password, user.salt)
-            and (user.verified or unverified)):
-                if self.db.DEBUG==True: self.db.log(" ==> authentication successful")
-                return user
 
     # -- password stuff -- 
 
