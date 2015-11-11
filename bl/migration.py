@@ -14,7 +14,7 @@ class Migration(Model):
     @classmethod
     def migrate(M, db, migrations_path=None, log=print):
         "update the database with unapplied migrations"
-        migrations_path = migrations_path or db.config.Database.migrations
+        migrations_path = migrations_path or db.migrations
         try:
             # will throw an error if this is the first migration -- migrations table doesn't yet exist.
             # (and this approach is a bit easier than querying for the existence of the table...)
