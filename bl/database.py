@@ -87,7 +87,8 @@ class Database(Dict):
             if cursor is None:
                 self.commit()
         except:
-            self.rollback()
+            if cursor is not None:
+                cursor.connection.rollback()
             raise
 
     def commit(self):
