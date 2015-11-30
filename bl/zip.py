@@ -8,9 +8,10 @@ from bl.dict import Dict
 
 class ZIP(Dict):
 
-    def __init__(self, fn, config=None, mode='r', compression=ZIP_DEFLATED):
-        Dict.__init__(self, fn=fn, config=config, mode=mode)
-        self.zip = ZipFile(self.fn, mode=mode, compression=compression)
+    def __init__(self, fn=None, config=None, mode='r', compression=ZIP_DEFLATED, log=print):
+        Dict.__init__(self, fn=fn, config=config, mode=mode, compression=compression, log=log)
+        if fn is not None:
+            self.zipfile = ZipFile(self.fn, mode=mode, compression=compression)
 
     def __repr__(self):
         return "%s('%s', config=%s, mode='%s')" % \
@@ -19,10 +20,10 @@ class ZIP(Dict):
     def unzip(self, path=None, members=None, pwd=None):
         if path is None: path = os.path.splitext(self.fn)[0]
         if not os.path.exists(path): os.makedirs(path)
-        self.zip.extractall(path=path, members=members, pwd=pwd)
+        self.zipfile.extractall(path=path, members=members, pwd=pwd)
 
     def close(self):
-        self.zip.close()
+        self.zipfile.close()
 
     @classmethod
     def zip_path(CLASS, path, fn=None, mode='w', exclude=[]):
