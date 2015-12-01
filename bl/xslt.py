@@ -1,4 +1,5 @@
 
+import time
 from lxml import etree
 from bl.dict import Dict
 from bl.string import String
@@ -189,29 +190,33 @@ class XSLT(XML):
     # xsl:output, xsl:include, xsl:copy, xsl:copy-of, xsl:param, 
     # xsl:apply-templates select|match, xsl:call-template
 
-    # XPATH FUNCTIONS
-    @classmethod
-    def uppercase(cls, elems):
-        for elem in elems:
+# XPATH FUNCTIONS
+def uppercase(context, elems):
+    for elem in elems:
+        if type(elem)==etree._ElementUnicodeResult:
+            elem = elem.upper()
+        else:
             elem.text = elem.text.upper()
             for ch in elem.getchildren():
                 uppercase(cls, [ch])
                 ch.tail = (ch.tail or '').upper()
-        return elems
+    return elems
 
-    @classmethod
-    def lowercase(cls, elems):
-        for elem in elems:
+def lowercase(context, elems):
+    for elem in elems:
+        if type(elem)==etree._ElementUnicodeResult:
+            elem = elem.lower()
+        else:
             elem.text = elem.text.lower()
             for ch in elem.getchildren():
                 lowercase(cls, [ch])
                 ch.tail = (ch.tail or '').lower()
-        return elems
+    return elems
 
 def register_xpath_functions(functions=[], namespace=None):
     ns = etree.FunctionNamespace(namespace)
     for fn in functions:
         ns[fn.__name__] = fn
 
-register_xpath_functions([XSLT.uppercase, XSLT.lowercase])
+register_xpath_functions([uppercase, lowercase])
 
