@@ -6,6 +6,7 @@ bl/css.py
 bl/database.py
 bl/dict.py
 bl/docx.py
+bl/emailer.py
 bl/file.py
 bl/git.py
 bl/id.py
@@ -19,12 +20,14 @@ bl/queue.py
 bl/record.py
 bl/recordset.py
 bl/rglob.py
+bl/routes.py
 bl/schema.py
 bl/scss.py
 bl/string.py
 bl/svn.py
 bl/text.py
 bl/url.py
+bl/user.py
 bl/xbuilder.py
 bl/xml.py
 bl/xslt.py
@@ -35,3 +38,8 @@ bl.egg-info/SOURCES.txt
 bl.egg-info/dependency_links.txt
 bl.egg-info/requires.txt
 bl.egg-info/top_level.txt
+bl/session/__init__.py
+bl/session/cookie_storage.py
+bl/session/database_storage.py
+bl/session/file_storage.py
+bl/session/memcache_storage.py
