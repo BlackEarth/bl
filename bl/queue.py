@@ -2,6 +2,7 @@
 import os, sys, subprocess, time, random, tempfile
 from glob import glob
 from bl.dict import Dict
+from bl.text import Text
 
 """There are other queue libraries; this one implements a simple file-based synchronous queue 
 that is processed at set intervals by the queue process.
@@ -9,26 +10,26 @@ that is processed at set intervals by the queue process.
 
 class Queue(Dict):
 
-    def __init__(self, path, log=print, debug=False):
-        Dict.__init__(self, path=path, log=log, debug=debug)
+    def __init__(self, path, log=print, debug=False, **args):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        Dict.__init__(self, path=path, log=log, debug=debug, **args)
 
     def __repr__(self):
         return "%s(path='%s')" % (self.__class__.__name__, self.path)
 
-    def listen(self, sleep=10):
+    def listen(self, sleep=5):
         """listen to the queue directory, with a wait time in seconds between processing"""
         while True:
             self.process()
             time.sleep(sleep)
 
-    def insert(self, script, prefix=""):
+    def insert(self, script, prefix="", ext='.py'):
         """insert the given script into the queue"""
-        qfn = os.path.join(
-            self.path,
-            "%s-%.5f-%.5f" % (prefix, time.time(), random.random()))
-        qf = open(qfn, 'wb')
+        qfn = os.path.join(self.path,
+                "%s%.5f-%.5f%s" % (prefix, time.time(), random.random(), ext))
+        qf = Text(fn=qfn, text=script)
         qf.write()
-        qf.close()
         return qfn
 
     def list(self, pattern="*"):
@@ -39,8 +40,7 @@ class Queue(Dict):
 
     def process(self):
         """process the items in the queue that are ready."""
-        fns = [fn for fn in self.list() 
-                if os.path.basename(fn)[0]!='!']
+        fns = self.list()
         for fn in fns:
             stderr = tempfile.NamedTemporaryFile()
             self.log("[%s] %s" % (log.timestamp(), fn))
@@ -80,9 +80,9 @@ class Queue(Dict):
                 os.remove(errorfn)
         self.log(t)
 
-    def rename(self, fn, prefix="!"):
+    def rename(self, fn, prefix="!", suffix=''):
         newfn = os.path.join(
             self.path,
-            prefix + os.path.basename(fn))
+            prefix + os.path.basename(fn) + suffix)
         os.rename(fn, newfn)
         return newfn
