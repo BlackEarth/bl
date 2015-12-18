@@ -28,8 +28,9 @@ class File(Dict):
     def read(self, mode='rb'):
         if DEBUG==True: 
             self.log("File.read(mode='%s'):" % mode, self.fn )
-        with open(self.fn, mode) as f: 
-            data=f.read()
+        f = open(self.fn, mode) 
+        data=f.read()
+        f.close()
         return data
 
     def dirpath(self):
@@ -50,8 +51,7 @@ class File(Dict):
 
     def tempfile(self, mode='wb', **args):
         "write the contents of the file to a tempfile and return the tempfile filename"
-        with tempfile.NamedTemporaryFile(mode=mode) as tf:
-            tfn = tf.name
+        tf = tempfile.NamedTemporaryFile(mode=mode)
         self.write(tf.name, mode=mode, **args)
         return tfn
 
@@ -65,9 +65,13 @@ class File(Dict):
         def try_write(b=None, tries=0):         
             try:
                 if b is None:
-                    b=self.read(mode=mode)
-                with open(outfn, mode) as f:
-                    f.write(b)
+                    if 'b' in mode:
+                        b=self.read(mode='rb')
+                    else:
+                        b=self.read(mode='r')
+                f = open(outfn, mode)
+                f.write(b)
+                f.close()
             except: 
                 if tries < max_tries:
                     time.sleep(.1)              # I found 0.1 s gives the disk time to recover. YMMV
