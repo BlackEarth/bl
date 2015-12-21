@@ -65,10 +65,10 @@ class DOCX(ZIP):
 
     def xml(self, fn=None, src='word/document.xml', transformer=None, XMLClass=None, **params):
         "return the src with the given transformation applied, if any."
-        if src not in self.zip.namelist(): return
+        if src not in self.zipfile.namelist(): return
         XMLClass = XMLClass or XML
         x = XMLClass(fn=fn or (self.fn and self.fn.replace('.docx', '.xml')) or None, # possibly there is none
-                root=self.zip.open(src).read(),
+                root=self.zipfile.open(src).read(),
                 config=self.config)
         if transformer is not None:
             x = XMLClass(fn=x.fn, 
