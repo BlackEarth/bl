@@ -74,7 +74,7 @@ class Image(File):
 
         # check to make sure maxpixels is met, and downsize if not
         w,h=[int(i) for i in subprocess.check_output([gm, 'identify', '-format', '%w,%h', outfn]).decode('utf8').strip().split(',')]
-        if w*h > maxpixels:
+        if maxpixels is not None and w*h > maxpixels:
             downratio = math.sqrt(float(maxpixels) / float(w*h))
             geom_arg = "%dx%d>" % (int(w*downratio), int(h*downratio))
             o = subprocess.check_output([gm, 'mogrify', '-resize', geom_arg, '-quality', "%d" % quality, outfn]).decode('utf8')
