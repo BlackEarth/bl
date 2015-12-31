@@ -22,16 +22,16 @@ class ZIP(Dict):
         self.zipfile.close()
 
     @classmethod
-    def zip_path(CLASS, path, fn=None, mode='w', exclude=[]):
-        if DEBUG==True: print("zip_path():", path)
+    def zip_path(CLASS, path, fn=None, mode='w', exclude=[], log=print):
+        if DEBUG==True: log("zip_path():", path)
         if fn is None:
             fn = path+'.zip'
-        zipf = CLASS(fn, mode=mode).zip
+        zipf = CLASS(fn, mode=mode).zipfile
         for walk_tuple in os.walk(path):
             dirfn = walk_tuple[0]
             for fp in walk_tuple[-1]:
                 walkfn = os.path.join(dirfn, fp)
-                if DEBUG==True: print('  ', os.path.relpath(walkfn, path))
+                if DEBUG==True: log('  ', os.path.relpath(walkfn, path))
                 if os.path.relpath(walkfn, path) not in exclude:
                     zipf.write(walkfn, os.path.relpath(walkfn, path))
         zipf.close()
