@@ -22,7 +22,7 @@ class XML(File):
             self.root = etree.fromstring(root, parser=parser)
         elif root is not None:
             self.root = root
-        elif type(fn) in [str, bytes]:                          # read from fn
+        elif type(fn) in [str, bytes] and os.path.isfile(fn):                          # read from fn
             tree = etree.parse(fn, parser=parser)
             self.root = tree.getroot()
             self.info = self.get_info(tree=tree)
