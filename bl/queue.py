@@ -34,9 +34,11 @@ class Queue(Dict):
 
     def list(self, pattern="*"):
         """get a list of files currently in the queue."""
-        return [fn for fn in 
+        l = [fn for fn in 
                 glob(os.path.join(self.path, pattern))
                 if os.path.basename(fn)[0] != '!']
+        l.sort()
+        return l
 
     def process(self):
         """process the items in the queue that are ready."""
