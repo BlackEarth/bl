@@ -64,8 +64,13 @@ class SCSS(Text):
         os.chdir(os.path.dirname(c.fn)) 
         # grumble about the use of bytes rather than unicode.
         b = bytes(text or self.text or self.render(self.styles), 'utf-8') 
-        if len(b)==0: c.text = ''
-        else: c.text = sass.compile(string=b)
+        if len(b)==0: 
+            c.text = ''
+        else: 
+            try:
+                c.text = sass.compile(string=b)
+            except:
+                c.text = sass.compile_string(b).decode('utf-8')
         return c
     
     @classmethod    
