@@ -1,5 +1,5 @@
 # routes.py -- request routing. 
-# by Sean A. Harrison <sah@tyndale.com>
+# by Sean A. Harrison <sah@blackearth.us>
 # ---------------------------------------------------------------------------
 
 import re   # regular expressions

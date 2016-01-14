@@ -234,8 +234,8 @@ def doctests():
     """doctests for the bl.db module
     >>> d = Database()
     >>> d.execute("create table table1 (name varchar primary key, email varchar not null unique);")
-    >>> d.execute("insert into table1 (name, email) values ('sah', 'sah@tyndale.com')")
-    >>> d.execute("insert into table1 (name, email) values ('sah', 'harrison@tbc.net')")
+    >>> d.execute("insert into table1 (name, email) values ('sah', 'sah@blackearthgroup.com')")
+    >>> d.execute("insert into table1 (name, email) values ('sah', 'sah.harrison@gmail.com')")
     Traceback (most recent call last):
       ...
     sqlite3.IntegrityError: UNIQUE constraint failed: table1.name
