@@ -63,6 +63,10 @@ class DOCX(ZIP):
     def transform(self, transformer, fn=None, XMLClass=None, **params):
         return self.xml(fn=fn, transformer=transformer, XMLClass=XMLClass, **params)
 
+    def read(self, src):
+        """return file data from within the docx file"""
+        return self.zipfile.read(src)
+
     def xml(self, fn=None, src='word/document.xml', transformer=None, XMLClass=None, **params):
         "return the src with the given transformation applied, if any."
         if src not in self.zipfile.namelist(): return
@@ -72,7 +76,7 @@ class DOCX(ZIP):
                 config=self.config)
         if transformer is not None:
             x = XMLClass(fn=x.fn, 
-                    root=transformer.Element(x.root, docx=self, fn=self.fn, **params), 
+                    root=transformer.Element(x.root, docx=self, fn=x.fn, **params), 
                     config=x.config)
         if DEBUG == True:
             t = etree.tounicode(x.root, pretty_print=False)
@@ -199,7 +203,7 @@ class DOCX(ZIP):
         return String(stylename).nameify()
 
     @classmethod
-    def strftime(C, msformat):
+    def strftime_string(C, msformat):
         "convert Word date/time picture (msformat) into a strftime format string"
         s = msformat
         s = re.sub("%", "%%", s)                   # percent sign
