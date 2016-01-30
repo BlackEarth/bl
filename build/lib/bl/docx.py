@@ -197,21 +197,21 @@ class DOCX(ZIP):
         return String(stylename).nameify()
 
     @classmethod
-    def strftime(C, msformat):
+    def strftime_string(C, msformat):
         "convert Word date/time picture (msformat) into a strftime format string"
         s = msformat
-        s = re.sub("%", "%%", s)                   # percent sign
+        s = re.sub("%", "%%", s)                        # percent sign
         s = re.sub(r"(?<!%)\b(y(?:yyy)?)\b", "%Y", s)   # 4-digit year
-        s = re.sub(r"(?<!%)\b(yy)\b", "%y", s)     # 2-digit year
-        s = re.sub(r"(?<!%)\b(MMMM)\b", "%B", s)   # full month
-        s = re.sub(r"(?<!%)\b(MMM)\b", "%b", s)    # abbrev. month
-        s = re.sub(r"(?<!%)\b(MM)\b", "%m", s)     # 2-digit month
-        s = re.sub(r"(?<!%)\b(dd?)\b", "%d", s)    # day
-        s = re.sub(r"(?<!%)\b(hh?)\b", "%I", s)    # 12-hr hour
-        s = re.sub(r"(?<!%)\b(HH?)\b", "%H", s)    # 24-hr hour
-        s = re.sub(r"(?<!%)\b(mm?)\b", "%M", s)    # minute
-        s = re.sub(r"(?<!%)\b(ss?)\b", "%S", s)    # second
-        s = re.sub(r"(?<!%)\b(am/pm)\b", "%p", s)  # 2-digit year
+        s = re.sub(r"(?<!%)\b(yy)\b", "%y", s)          # 2-digit year
+        s = re.sub(r"(?<!%)\b(MMMM)\b", "%B", s)        # full month
+        s = re.sub(r"(?<!%)\b(MMM)\b", "%b", s)         # abbrev. month
+        s = re.sub(r"(?<!%)\b(MM)\b", "%m", s)          # 2-digit month
+        s = re.sub(r"(?<!%)\b(dd?)\b", "%d", s)         # day
+        s = re.sub(r"(?<!%)\b(hh?)\b", "%I", s)         # 12-hr hour
+        s = re.sub(r"(?<!%)\b(HH?)\b", "%H", s)         # 24-hr hour
+        s = re.sub(r"(?<!%)\b(mm?)\b", "%M", s)         # minute
+        s = re.sub(r"(?<!%)\b(ss?)\b", "%S", s)         # second
+        s = re.sub(r"(?<!%)\b(am/pm)\b", "%p", s)       # 2-digit year
         return s
 
     @classmethod
