@@ -7,15 +7,12 @@ from bl.url import URL
 class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
-    def __init__(self, svnconfig=None, url=None, username=None, password=None, trust_server_cert=True, log=print):
-        Dict.__init__(self, 
-            url=URL(url or svnconfig.url or ''), 
-            username=username or svnconfig.username, 
-            password=password or svnconfig.password,
-            svn=svnconfig.svn or 'svn', 
-            mucc=svnconfig.mucc or 'svnmucc',
-            trust_server_cert=svnconfig.trust_server_cert or trust_server_cert,
-            log=print)
+    def __init__(self, log=print, 
+                url=None, username=None, password=None, 
+                svn='svn', mucc='svnmucc', trust_server_cert=True):
+        Dict.__init__(self, log=log,
+            url=URL(url or ''), username=username, password=password,
+            svn=svn, mucc=mucc, trust_server_cert=trust_server_cert)
 
     def __repr__(self):
         return "SVN(url='%s')" % self.url
