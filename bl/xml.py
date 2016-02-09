@@ -145,7 +145,9 @@ class XML(File):
         try:
             self.assertValid(tag=tag, schemas=schemas)
         except:
-            return sys.exc_info()[1]
+            result = str(sys.exc_info()[1])
+            result += '\n' + self.jing()
+            return result
 
     def isvalid(self, tag=None, schemas=None):
         try:
@@ -157,15 +159,14 @@ class XML(File):
     def jing(self, tag=None, schemas=None, ext='.rnc'):
         """use the (included) jing library to validate the XML."""
         from . import JARS
-        jingfn = os.path.join(JARS, 'jing.jar')
+        jing_jar = os.path.join(JARS, 'jing.jar')
         schemas = schemas or self.schemas
-        schemafn = Schema.filename(tag, schemas, ext=ext)
+        schemafn = Schema.filename(tag or self.root.tag, schemas, ext=ext)
         try:
-            subprocess.check_output(['java', '-jar', jingfn, '-c', schemafn, self.fn])
+            return subprocess.check_output(['java', '-jar', jing_jar, '-c', schemafn, self.fn])
         except subprocess.CalledProcessError as e:
             tbtext = html.unescape(str(e.output, 'UTF-8'))
-            raise RuntimeError("XML.jing() failure:\n"
-                + tbtext).with_traceback(sys.exc_info()[2]) from None
+            return tbtext
 
     # == NAMESPACE == 
 
