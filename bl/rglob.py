@@ -1,12 +1,12 @@
 
 import os
-from glob import glob
+from glob import glob, escape
 
 def rglob(dirname, pattern, incl_dirs=False, sort=True):
     """recursive glob, gets all files that match the pattern within the directory tree"""
     fns = glob(os.path.join(dirname, pattern))
     dirs = [fn for fn 
-            in [os.path.join(dirname, fn) 
+            in [escape(os.path.join(dirname, fn)) 
                 for fn in os.listdir(dirname)] 
             if os.path.isdir(fn)]
     if incl_dirs==True:
