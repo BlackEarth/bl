@@ -39,7 +39,7 @@ class Schema(Text):
         if type(schemas)==str: 
             schemas = [schemas]
         for schema_path in schemas:
-            fn = os.path.join(schemas, cls.dirname(tag), cls.basename(tag, ext=ext))
+            fn = os.path.join(schema_path, cls.dirname(tag), cls.basename(tag, ext=ext))
             if os.path.exists(fn):
                 return fn
 
