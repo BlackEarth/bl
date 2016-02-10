@@ -135,24 +135,32 @@ class XML(File):
             rncfn = Schema.filename(tag, schemas, ext='.rnc')
             if os.path.exists(rncfn):
                 rngfn = Schema(rncfn).trang(ext='.rng')
-        return etree.RelaxNG(etree.parse(rngfn))
+        if os.path.exists(rngfn):
+            return etree.RelaxNG(etree.parse(rngfn))
 
-    def assertValid(self, tag=None, schemas=None):
-        validator = self.Validator(tag=tag, schemas=schemas)
+    def assertValid(self, tag=None, schemas=None, validator=None):
+        validator = validator or self.Validator(tag=tag, schemas=schemas)
         validator.assertValid(self.root)
     
-    def validate(self, tag=None, schemas=None):
+    def validate(self, tag=None, schemas=None, validator=None):
         try:
-            self.assertValid(tag=tag, schemas=schemas)
+            validator = validator or self.Validator(tag=tag, schemas=schemas)
+            if validator is None:
+                return 'No validator available'
+            self.assertValid(tag=tag, schemas=schemas, validator=validator)
         except:
             result = str(sys.exc_info()[1])
             result += '\n' + self.jing()
             return result
 
-    def isvalid(self, tag=None, schemas=None):
+    def isvalid(self, tag=None, schemas=None, validator=None):
         try:
-            self.assertValid(tag=tag, schemas=schemas)
-            return True
+            validator = validator or self.Validator(tag=tag, schemas=schemas)
+            if validator is None:
+                return None
+            else:
+                self.assertValid(tag=tag, schemas=schemas)
+                return True
         except:
             return False
 
