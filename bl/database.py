@@ -69,6 +69,10 @@ class Database(Dict):
     def __repr__(self):
         return "Database(dba=%s, connection_string='%s')" % (self.dba.__name__, self.connection_string)
 
+    def migrate(self, migrations=None):
+        from .migration import Migration
+        Migration.migrate(self, migrations_path=migrations or self.migrations, log=self.log)
+
     def cursor(self):
         """get a cursor for fine-grained transaction control."""
         cursor = self.connection.cursor()
