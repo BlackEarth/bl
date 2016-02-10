@@ -131,11 +131,11 @@ class XML(File):
         tag = tag or self.root.tag
         schemas = schemas or self.schemas
         rngfn = Schema.filename(tag, schemas, ext='.rng')
-        if not os.path.exists(rngfn) or rebuild==True:          # .rnc => .rng
+        if rngfn is None or not os.path.exists(rngfn) or rebuild==True:          # .rnc => .rng
             rncfn = Schema.filename(tag, schemas, ext='.rnc')
-            if os.path.exists(rncfn):
+            if rncfn is not None and os.path.exists(rncfn):
                 rngfn = Schema(rncfn).trang(ext='.rng')
-        if os.path.exists(rngfn):
+        if rngfn is not None and os.path.exists(rngfn):
             return etree.RelaxNG(etree.parse(rngfn))
 
     def assertValid(self, tag=None, schemas=None, validator=None):
