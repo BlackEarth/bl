@@ -30,13 +30,18 @@ class Schema(Text):
             return outfn
     
     @classmethod
-    def from_tag(cls, tag, schema_path, ext='.rnc'):
-        """load a schema using an element's tag"""
-        return cls(fn=cls.filename(tag, schema_path, ext=ext))
+    def from_tag(cls, tag, schemas, ext='.rnc'):
+        """load a schema using an element's tag. schemas can be a string or a list of strings"""
+        return cls(fn=cls.filename(tag, schemas, ext=ext))
 
     @classmethod
-    def filename(cls, tag, schema_path, ext='.rnc'):
-        return os.path.join(schema_path, cls.dirname(tag), cls.basename(tag, ext=ext))
+    def filename(cls, tag, schemas, ext='.rnc'):
+        if type(schemas)==str: 
+            schemas = [schemas]
+        for schema_path in schemas:
+            fn = os.path.join(schemas, cls.dirname(tag), cls.basename(tag, ext=ext))
+            if os.path.exists(fn):
+                return fn
 
     @classmethod
     def dirname(cls, namespace):
