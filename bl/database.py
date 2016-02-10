@@ -31,7 +31,7 @@ class Database(Dict):
 
     def __init__(self, connection_string=None, dba=None, tries=3, DEBUG=False, log=print, **args):
         Dict.__init__(self, 
-            connection_string=connection_string or '', 
+            connection_string=re.sub('\s+', ' ', connection_string or ''),
             dba=dba or imp.load_module('sqlite3', *imp.find_module('sqlite3')), 
             DEBUG=DEBUG, tries=tries, log=log, **args)
         if self.dba is None:
