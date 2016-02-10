@@ -142,15 +142,16 @@ class XML(File):
         validator = validator or self.Validator(tag=tag, schemas=schemas)
         validator.assertValid(self.root)
     
-    def validate(self, tag=None, schemas=None, validator=None):
+    def validate(self, tag=None, schemas=None, validator=None, jing=True):
         try:
             validator = validator or self.Validator(tag=tag, schemas=schemas)
             if validator is None:
                 return 'No validator available'
             self.assertValid(tag=tag, schemas=schemas, validator=validator)
         except:
-            result = str(sys.exc_info()[1])
-            result += '\n' + self.jing()
+            result = str(sys.exc_info()[1])     # result from lxml validator
+            if jing==True:
+                result += '\n' + self.jing()        # result from jing validator
             return result
 
     def isvalid(self, tag=None, schemas=None, validator=None):
