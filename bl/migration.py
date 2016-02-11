@@ -24,6 +24,7 @@ class Migration(Model):
         fns = [fn for fn 
                 in glob(os.path.join(migrations_path, "*.*")) 
                 if M.create_id(fn) not in migrations_ids]
+        fns.sort()
         log("[%s]" % time.strftime("%Y-%m-%d %H:%M:%S"), "Migrate Database: %d migrations" % len(fns))
         for fn in fns:
             id = M.create_id(fn)
