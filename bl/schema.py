@@ -35,10 +35,13 @@ class Schema(Text):
         return cls(fn=cls.filename(tag, schemas, ext=ext))
 
     @classmethod
-    def filename(cls, tag, schemas, ext='.rnc'):
-        if type(schemas)==str: 
-            schemas = [schemas]
-        for schema_path in schemas:
+    def filename(cls, tag, schema_paths, ext='.rnc'):
+        """given a tag and a list of schema_paths, return the filename of the schema.
+        If schema_paths is a string, treat it as a comma-separated list.
+        """
+        if type(schema_paths)==str: 
+            schema_paths = re.split("\s*,\s*", schema_paths)
+        for schema_path in schema_paths:
             fn = os.path.join(schema_path, cls.dirname(tag), cls.basename(tag, ext=ext))
             if os.path.exists(fn):
                 return fn
