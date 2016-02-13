@@ -7,12 +7,12 @@ from bl.url import URL
 class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
-    def __init__(self, url=None, 
+    def __init__(self, url=None, local=None,
                 username=None, password=None, svn=None, mucc=None, 
                 trust_server_cert=True, log=print):
-        Dict.__init__(self, url=URL(url or ''), 
+        Dict.__init__(self, url=URL(url or ''), local=local,
             username=username, password=password, svn=svn or 'svn', mucc=mucc or 'svnmucc',
-            trust_server_cert=svnconfig.trust_server_cert or trust_server_cert, log=print)
+            trust_server_cert=trust_server_cert, log=print)
 
     def __repr__(self):
         return "SVN(url='%s')" % self.url
@@ -41,7 +41,6 @@ class SVN(Dict):
         cmdlist = list(cmdlist)
         if '--xml' in cmdlist and '--verbose' in cmdlist:
             cmdlist.remove('--verbose')
-        self.log(cmdlist)
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
         except subprocess.CalledProcessError as e:
