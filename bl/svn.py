@@ -1,6 +1,7 @@
 # interface to subversion repository
 
 import subprocess, tempfile, sys
+from lxml import etree
 from bl.dict import Dict
 from bl.url import URL
 
@@ -8,8 +9,8 @@ class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
     def __init__(self, url=None, local=None,
-                username=None, password=None, svn=None, mucc=None, 
-                trust_server_cert=True, log=print):
+            username=None, password=None, svn=None, mucc=None, 
+            trust_server_cert=True, log=print):
         Dict.__init__(self, url=URL(url or ''), local=local,
             username=username, password=password, svn=svn or 'svn', mucc=mucc or 'svnmucc',
             trust_server_cert=trust_server_cert, log=print)
@@ -19,7 +20,11 @@ class SVN(Dict):
 
     def __call__(self, *args):
         "uses svn to access the repository"
-        return self._subprocess(self.svn, *args)
+        result = self._subprocess(self.svn, *args)
+        if '--xml' in args:
+            return etree.XML(result)
+        else:
+            return result
 
     def mucc(self, *args):
         "use svnmucc to access the repository"
@@ -39,7 +44,7 @@ class SVN(Dict):
             cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
-        if '--xml' in cmdlist and '--verbose' in cmdlist:
+        if '--xml' in cmdlist and '--verbose' in cmdlist and cmd not in ['proplist']:
             cmdlist.remove('--verbose')
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
@@ -52,8 +57,7 @@ class SVN(Dict):
 
     # == USER API COMMANDS == 
 
-    def cat(self, url, 
-                rev='HEAD'):
+    def cat(self, url, rev='HEAD'):
         args = ['--revision', rev, URL(url).quoted()]
         return self('cat', *args)
 
@@ -62,8 +66,7 @@ class SVN(Dict):
                 URL(src_url).quoted(), URL(dest_url).quoted()]
         return self('copy', *args)
 
-    def delete(self, *urls, msg='', 
-                force=False):
+    def delete(self, *urls, msg='', force=False):
         args = ['--message', msg]
         if force==True:
             args.append('--force')
@@ -73,8 +76,7 @@ class SVN(Dict):
     def diff(self, *args):
         return self('diff', *args)
 
-    def export(self, src_url, dest_path, 
-                rev='HEAD', depth='infinity', pegrev=None):
+    def export(self, src_url, dest_path, rev='HEAD', depth='infinity', pegrev=None):
         if pegrev is not None:
             src_url += '@'+pegrev
         args = ['--revision', rev, '--depth', depth, 
@@ -88,7 +90,7 @@ class SVN(Dict):
         args += [src_path, URL(dest_url).quoted()]
         return self('import', *args)
 
-    def info(self, url, rev='HEAD', depth='empty', xml=False):
+    def info(self, url, rev='HEAD', depth='empty', verbose=True, xml=False):
         args = ['--revision', rev, '--depth', depth]
         if xml==True: args.append('--xml')
         if verbose==True and xml!=True: 
@@ -141,16 +143,14 @@ class SVN(Dict):
         args = ['--message', msg, path, URL(dest_url).quoted()]
         return self.mucc('put', *args)
 
-    def remove(self, *urls, msg='', 
-                force=False):
+    def remove(self, *urls, msg='', force=False):
         args = ['--message', msg]
         if force==True: 
             args.append('--force')
         args += [URL(u).quoted() for u in list(urls)]
         return self('remove', *args)
 
-    def unlock(self, *urls, 
-                force=False):
+    def unlock(self, *urls, force=False):
         args = []
         if force==True: 
             args.append('--force')
@@ -159,7 +159,21 @@ class SVN(Dict):
 
     # == Properties == 
 
-    def propset(self, name, value, url):
+    def proplist(self, url, rev='HEAD', depth='infinity', 
+            xml=False, verbose=True, inherited=True, changelist=None):
+        args = ['--revision', rev, '--depth', depth]
+        if xml==True: args += ['--xml']
+        if verbose==True: args += ['--verbose']
+        if inherited==True: args += ['--show-inherited-props']
+        if changelist is not None: args += ['--changelist', changelist]
+        args += [URL(url).quoted()]
+        return self('proplist', *args)
+
+    def propget(self, name, url, rev='HEAD', depth='infinity', xml=False):
+        pass
+
+    def propset(self, name, url, rev='HEAD', msg='', 
+                depth='infinity', force=False):
         pass
 
     def propdel(self, name, url, rev=None, 
@@ -168,18 +182,6 @@ class SVN(Dict):
 
     def propedit(self, name, url, rev=None, msg='', 
                 force=False):
-        pass
-
-    def propget(self, name, url, rev='HEAD', 
-                depth='infinity', xml=False):
-        pass
-
-    def proplist(self, name, url, rev='HEAD', 
-                depth='infinity', xml=False, verbose=True):
-        pass
-
-    def propset(self, name, url, rev='HEAD', msg='', 
-                depth='infinity', force=False):
         pass
 
 if __name__ == '__main__':
