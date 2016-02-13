@@ -39,5 +39,5 @@ class Log:
     def timestamp(self):
         # return a timestamp string for the current time
         from time import strftime
-        return strftime("%Y-%m-%d %H:%M:%S %z")
+        return strftime("%Y-%m-%d %H:%M:%S %Z")
 
