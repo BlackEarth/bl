@@ -1,6 +1,6 @@
 # interface to subversion repository
 
-import subprocess, tempfile, sys
+import os, subprocess, tempfile, sys
 from lxml import etree
 from bl.dict import Dict
 from bl.url import URL
@@ -9,10 +9,12 @@ class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
     def __init__(self, url=None, local=None,
-            username=None, password=None, svn=None, mucc=None, 
+            username=None, password=None, 
+            svn=None, svnmucc=None, svnlook=None,
             trust_server_cert=True, log=print):
         Dict.__init__(self, url=URL(url or ''), local=local,
-            username=username, password=password, svn=svn or 'svn', mucc=mucc or 'svnmucc',
+            username=username, password=password, 
+            svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
             trust_server_cert=trust_server_cert, log=print)
 
     def __repr__(self):
@@ -28,24 +30,28 @@ class SVN(Dict):
 
     def mucc(self, *args):
         "use svnmucc to access the repository"
-        return self._subprocess(self.mucc, *args)
+        return self._subprocess(self.svnmucc, *args)
+
+    def look(self, *args):
+        "use svnlook to access the repository"
+        return self._subprocess(self.svnlook, *args)
 
     def _subprocess(self, cmd, *args):
         """uses subprocess.check_output to get and return the output of svn or svnmucc,
         or raise an error if the cmd raises an error.
         """
         stderr = tempfile.NamedTemporaryFile()
-        cmdlist = [cmd, '--non-interactive']
-        if self.trust_server_cert==True and 'svnmucc' not in cmd:
-            cmdlist += ['--trust-server-cert']
-        if self.username is not None:
-            cmdlist += ['--username', self.username]
-        if self.password is not None:
-            cmdlist += ['--password', self.password]
+        cmdlist = []
+        if 'svnlook' not in cmd:
+            cmdlist += [cmd, '--non-interactive']
+            if self.trust_server_cert==True and 'svnmucc' not in cmd:
+                cmdlist += ['--trust-server-cert']
+            if self.username is not None:
+                cmdlist += ['--username', self.username]
+            if self.password is not None:
+                cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
-        if '--xml' in cmdlist and '--verbose' in cmdlist and 'proplist' not in cmdlist:
-            cmdlist.remove('--verbose')
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
         except subprocess.CalledProcessError as e:
@@ -58,8 +64,14 @@ class SVN(Dict):
     # == USER API COMMANDS == 
 
     def cat(self, url, rev='HEAD'):
-        args = ['--revision', rev, URL(url).quoted()]
-        return self('cat', *args)
+        if self.local not in [None, '']:
+            # fast: svnlook cat
+            path = os.path.relpath(url, str(self.url))
+            return self.look('cat', '--revision', rev, self.local, path)
+        else:
+            # slow: svn cat
+            args = ['--revision', rev, URL(url).quoted()]
+            return self('cat', *args)
 
     def copy(self, src_url, dest_url, msg='', rev='HEAD'):
         args = ['--revision', rev, '--message', msg, 
@@ -83,14 +95,22 @@ class SVN(Dict):
                 URL(src_url).quoted(), dest_path]
         return self('export', *args)
 
-    def importe(self, src_path, dest_url, msg='', 
-            depth='infinity', force=False):
+    def filesize(self, url, rev='HEAD'):
+        if self.local not in [None, '']:
+            # fast: svnlook filesize
+            path = os.path.relpath(url, str(self.url))
+            return self.look('filesize', '--revision', rev, self.local, path)
+        else:
+            # slow: svn cat
+            return len(self.cat(url, rev=rev))
+
+    def importe(self, src_path, dest_url, msg='', depth='infinity', force=False):
         args = ['--message', msg, '--depth', depth]
         if force==True: args.append('--force')
         args += [src_path, URL(dest_url).quoted()]
         return self('import', *args)
 
-    def info(self, url, rev='HEAD', depth='empty', verbose=True, xml=False):
+    def info(self, url, rev='HEAD', depth='empty', verbose=True, xml=True):
         args = ['--revision', rev, '--depth', depth]
         if xml==True: args.append('--xml')
         if verbose==True and xml!=True: 
@@ -99,7 +119,7 @@ class SVN(Dict):
         return self('info', *args)
 
     def list(self, url, rev='HEAD', depth='infinity',
-                verbose=True, xml=False):
+                verbose=True, xml=True):
         args = ['--revision', rev, '--depth', depth]
         if xml==True: 
             args.append('--xml')
@@ -115,12 +135,10 @@ class SVN(Dict):
         args += [URL(u).quoted() for u in list(urls)]
         self('lock', *args)
 
-    def log(self, url, revs='HEAD:1', verbose=True, xml=False):
+    def log(self, url, revs='HEAD:1', verbose=True, xml=True):
         args = ['--revision', revs]
-        if verbose==True: 
-            args.append('--verbose')
-        if xml==True: 
-            args.append('--xml')
+        if verbose==True: args.append('--verbose')
+        if xml==True: args.append('--xml')
         args.append(URL(url).quoted())
         return self('log', *args)
 
@@ -160,7 +178,7 @@ class SVN(Dict):
     # == Properties == 
 
     def proplist(self, url, rev='HEAD', depth='infinity', 
-            xml=False, verbose=True, inherited=True, changelist=None):
+            xml=True, verbose=True, inherited=True, changelist=None):
         args = ['--revision', rev, '--depth', depth]
         if xml==True: args += ['--xml']
         if verbose==True: args += ['--verbose']
@@ -169,7 +187,7 @@ class SVN(Dict):
         args += [URL(url).quoted()]
         return self('proplist', *args)
 
-    def propget(self, name, url, rev='HEAD', depth='infinity', xml=False):
+    def propget(self, name, url, rev='HEAD', depth='infinity', xml=True):
         pass
 
     def propset(self, name, url, rev='HEAD', msg='', 
