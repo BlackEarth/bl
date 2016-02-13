@@ -39,7 +39,7 @@ class SVN(Dict):
             cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
-        if '--xml' in cmdlist and '--verbose' in cmdlist:
+        if '--xml' in cmdlist and '--verbose' in cmdlist and 'proplist' not in cmdlist:
             cmdlist.remove('--verbose')
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
