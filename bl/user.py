@@ -10,6 +10,9 @@ class User(Model):
 
     MIN_PASSWORD_LEN = 8
     PASSWORD_CHARSET = id.id_chars
+
+    BCRYPT_MODE = '2y'      # because this is used by Apache
+    BCRYPT_ROUNDS = 12      # because it takes about .3 seconds
     
     def register(self, cursor=None):
         """try to register the given user, returning any errors that occur."""
@@ -44,25 +47,49 @@ class User(Model):
                 return errors
         # if no errors, returns None
 
-    def authenticate(self, email, password, unverified=False):
-        """Authenticate the login against the database."""
+    def authenticate(self, email, password, unverified=False, upgrade=True):
+        """Authenticate the login against the database.
+        unverified  : whether to authenticate a user for whom the 'verified' field is not True
+        upgrade      : whether to upgrade the user's password after successful authentication 
+                        using the current preferred encryption method, if out-of-date
+        """
         user = self.select_one(where="email ilike %s", vals=[email])   # case-insensitive and secure
-        if (user is not None
-            and user.pop('pwd') == user.encrypt_password(password, user.pop('salt')) # pop pwd & salt
-            and (user.verified or unverified)):
-                if self.db.DEBUG==True: self.db.log(user.email, " ==> authentication successful")
-                return user
+        if user is not None and (user.verified or unverified):
+            md = re.search("^\$\w+\$", user.pwd)
+            if md is False:
+                # there is no $...$ at the beginning, 
+                # which means it's my old method with SHA256 and separate salt
+                if user.pwd == self.encrypt_sha256(password, user.salt):
+                    if upgrade==True:
+                        user.set_password(password)
+                        user.salt = None    # no longer needed.
+                        user.commit()                    
+                    return user
 
-    def set_password(self, passwd, errors=[]):
-        """sets the user's password."""
-        C = self.__class__
-        pwd_errors = C.password_errors(passwd)
-        if pwd_errors!=[]:
-            raise ValueError("password is not valid: %s" % '. '.join(pwd_errors))
-        else:
-            self.salt = self.make_salt()
-            self.pwd = self.encrypt_password(passwd, self.salt)
-    
+            else:
+                # user.pwd has $...$ at the beginning, which is the "normal" way to do passwords.
+                # support various common password encryption schemes
+                scheme = md.group()
+                verify_pwd = None
+                if scheme == '$apr1$':                                          # apache md5
+                    from passlib.hash import apr_md5_crypt
+                    verify_pwd = apr_md5_crypt.verify
+                elif scheme in ['$2y$', '$2a$', '$2b$']:                        # bcrypt 
+                    from passlib.hash import bcrypt
+                    verify_pwd = bcrypt.verify
+                elif scheme == '$1$':                                           # regular md5
+                    from passlib.hash import md5_crypt
+                    verify_pwd = md5_crypt.verify
+                elif scheme == '$6$':                                           # SHA512
+                    pass
+
+                if verify_pwd is not None and verify_pwd(password, user.pwd):
+                    if upgrade==True and scheme != '$%s$' % self.BCRYPT_MODE:
+                        user.set_password(password)
+                        user.commit()
+                    return user
+
+
     # override base class insert() and update() to ensure that email is valid
     def insert(self, **args):
         C = self.__class__
@@ -100,6 +127,15 @@ class User(Model):
 
     # -- password stuff -- 
 
+    def set_password(self, password, errors=[]):
+        """sets the user's password."""
+        C = self.__class__
+        pwd_errors = C.password_errors(password)
+        if pwd_errors!=[]:
+            raise ValueError("password is not valid: %s" % '. '.join(pwd_errors))
+        else:
+            self.pwd = self.encrypt_password(password)
+    
     @classmethod
     def random_password(C, length=None, charset=None):
         """generate a random password. 
@@ -111,17 +147,17 @@ class User(Model):
         return id.random_id(length=length, charset=charset)
 
     @classmethod
-    def make_salt(C, salt_key=''):
-        h = hashlib.sha256()
-        if salt_key != '': h.update(salt_key)
-        h.update(id.random_id(79, id.ascii_chars).encode())
-        return h.hexdigest()
+    def encrypt_password(C, password, rounds=BCRYPT_ROUNDS, ident=BCRYPT_MODE):
+        from passlib.hash import bcrypt
+        return bcrypt.encrypt(password, rounds=rounds, ident=ident)
 
     @classmethod
-    def encrypt_password(C, password, salt):
+    def encrypt_sha256(C, password, salt=None):
+        """This is my old encrypt_password() function, which I'm keeping around for backward compatibility"""
+        import hashlib
         h = hashlib.sha256()
         h.update(password.encode('utf-8'))
-        h.update(salt.encode('utf-8'))
+        h.update((salt or '').encode('utf-8'))
         return h.hexdigest()
 
     # -- validations --
