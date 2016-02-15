@@ -52,6 +52,7 @@ class SVN(Dict):
                 cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
+        print(cmdlist)
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
         except subprocess.CalledProcessError as e:
@@ -135,8 +136,9 @@ class SVN(Dict):
         args += [URL(u).quoted() for u in list(urls)]
         self('lock', *args)
 
-    def log(self, url, revs='HEAD:1', verbose=True, xml=True):
+    def log(self, url, revs='HEAD:1', search=None, verbose=True, xml=True):
         args = ['--revision', revs]
+        if search is not None: args += ['--search', search]
         if verbose==True: args.append('--verbose')
         if xml==True: args.append('--xml')
         args.append(URL(url).quoted())
