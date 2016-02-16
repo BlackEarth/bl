@@ -25,14 +25,14 @@ class Config(Dict):
 
     def __init__(self, filename, interpolation=ExtendedInterpolation(), **kwargs):
         config = ConfigParser(interpolation=interpolation, **kwargs)
+        self.__dict__['__file__'] = filename
         if config.read(filename):
             self.parse_config(config)
         else:
             raise KeyError("Config file not found at %s" % filename)
-        self.filename = filename.replace('\\', '/')
 
     def __repr__(self):
-        return "Config('%s')" % self.filename
+        return "Config('%s')" % self.__file__
 
     def parse_config(self, config):
         for s in config.sections():
@@ -51,6 +51,23 @@ class Config(Dict):
                     self[s][k] = Dict(**eval(v))
                 else:                                               # default: string
                     self[s][k] = v.strip()
+
+    def write(self, fn=None, sorted=True):
+        """write the contents of this config to fn or its __file__.
+        NOTE: All interpolations will be expanded in the written file.
+        """
+        config = ConfigParser(interpolation=None)
+        keys = self.keys()
+        if sorted==True: keys.sort()
+        for key in keys:
+            config[key] = {}
+            ks = self[key].keys()
+            if sorted==True: ks.sort()
+            for k in ks:
+                config[key][k] = str(self[key][k])
+        with open(fn or self.__file__, 'w') as f:
+            config.write(f)
+
 
 if __name__ == "__main__":
     import doctest
