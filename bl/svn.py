@@ -106,7 +106,7 @@ class SVN(Dict):
         if self.local not in [None, '']:
             # fast: svnlook filesize
             path = os.path.relpath(url, str(self.url))
-            return self.look('filesize', '--revision', rev, self.local, path)
+            return int(self.look('filesize', '--revision', rev, self.local, path))
         else:
             # slow: svn cat
             return len(self.cat(url, rev=rev))
