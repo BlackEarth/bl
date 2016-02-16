@@ -15,7 +15,10 @@ class SVN(Dict):
         Dict.__init__(self, url=URL(url or ''), local=local,
             username=username, password=password, 
             svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
-            trust_server_cert=trust_server_cert, access_file=access_file, log_=log)
+            trust_server_cert=trust_server_cert, log_=log)
+        if access_file is not None: # load the access file
+            from .svn_access_file import SVNAccessFile
+            self.access_file = SVNAccessFile(access_file)
 
     def __repr__(self):
         return "SVN(url='%s')" % self.url
