@@ -56,7 +56,7 @@ class User(Model):
         user = self.select_one(where="email ilike %s", vals=[email])   # case-insensitive and secure
         if user is not None and (user.verified or unverified):
             md = re.search("^\$\w+\$", user.pwd)
-            if md is False:
+            if md is None:
                 # there is no $...$ at the beginning, 
                 # which means it's my old method with SHA256 and separate salt
                 if user.pwd == self.encrypt_sha256(password, user.salt):
