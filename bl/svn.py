@@ -73,7 +73,7 @@ class SVN(Dict):
     def cat(self, url, rev='HEAD'):
         if self.local not in [None, '']:
             # fast: svnlook cat
-            path = os.path.relpath(url, str(self.url))
+            path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
             return self.look('cat', '--revision', rev, self.local, path)
         else:
             # slow: svn cat
@@ -105,7 +105,7 @@ class SVN(Dict):
     def filesize(self, url, rev='HEAD'):
         if self.local not in [None, '']:
             # fast: svnlook filesize
-            path = os.path.relpath(url, str(self.url))
+            path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
             return int(self.look('filesize', '--revision', rev, self.local, path))
         else:
             # slow: svn cat
@@ -193,7 +193,8 @@ class SVN(Dict):
         if inherited==True: args += ['--show-inherited-props']
         if self.local not in [None, '']:
             # fast: svnlook cat
-            path = os.path.relpath(url, str(self.url))
+            path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
+            self.log_(path)
             args += [self.local, path]
             return etree.XML(self.look('proplist', *args))
         else:
