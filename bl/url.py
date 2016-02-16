@@ -76,6 +76,11 @@ class URL(Dict):
             self.params, self.qstring(), self.fragment)
         return urllib.parse.urlunparse(pr)        
 
+    def unquoted(self):
+        pr = (self.scheme, self.host, urllib.parse.unquote(self.path),
+            self.params, self.qstring(), self.fragment)
+        return urllib.parse.urlunparse(pr)                
+
     def __repr__(self):
         return """URL('%s')""" % str(self)
 
