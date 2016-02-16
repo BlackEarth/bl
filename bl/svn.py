@@ -15,7 +15,7 @@ class SVN(Dict):
         Dict.__init__(self, url=URL(url or ''), local=local,
             username=username, password=password, 
             svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
-            trust_server_cert=trust_server_cert, log=print)
+            trust_server_cert=trust_server_cert, log_=log)
 
     def __repr__(self):
         return "SVN(url='%s')" % self.url
@@ -30,20 +30,26 @@ class SVN(Dict):
 
     def mucc(self, *args):
         "use svnmucc to access the repository"
-        return self._subprocess(self.svnmucc, *args)
+        return self._subprocess(self.svnmucc or 'svnmucc', *args)
 
     def look(self, *args):
         "use svnlook to access the repository"
-        return self._subprocess(self.svnlook, *args)
+        modargs = [arg for arg in args]
+        for arg in modargs:
+            # if --revision HEAD, just omit the argument, because svnlook doesn't like or need it.
+            if arg=='--revision' and modargs[modargs.index(arg)+1]=='HEAD':
+                _=modargs.pop(modargs.index(arg)+1)
+                _=modargs.pop(modargs.index(arg))
+        return self._subprocess(self.svnlook or 'svnlook', *modargs)
 
     def _subprocess(self, cmd, *args):
         """uses subprocess.check_output to get and return the output of svn or svnmucc,
         or raise an error if the cmd raises an error.
         """
         stderr = tempfile.NamedTemporaryFile()
-        cmdlist = []
+        cmdlist = [cmd]
         if 'svnlook' not in cmd:
-            cmdlist += [cmd, '--non-interactive']
+            cmdlist += ['--non-interactive']
             if self.trust_server_cert==True and 'svnmucc' not in cmd:
                 cmdlist += ['--trust-server-cert']
             if self.username is not None:
@@ -52,6 +58,7 @@ class SVN(Dict):
                 cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
+        self.log_(' '.join(cmdlist))
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
         except subprocess.CalledProcessError as e:
@@ -180,13 +187,19 @@ class SVN(Dict):
 
     def proplist(self, url, rev='HEAD', depth='infinity', 
             xml=True, verbose=True, inherited=True, changelist=None):
-        args = ['--revision', rev, '--depth', depth]
+        args = ['--revision', rev] 
         if xml==True: args += ['--xml']
         if verbose==True: args += ['--verbose']
         if inherited==True: args += ['--show-inherited-props']
-        if changelist is not None: args += ['--changelist', changelist]
-        args += [URL(url).quoted()]
-        return self('proplist', *args)
+        if self.local not in [None, '']:
+            # fast: svnlook cat
+            path = os.path.relpath(url, str(self.url))
+            args += [self.local, path]
+            return etree.XML(self.look('proplist', *args))
+        else:
+            if changelist is not None: args += ['--changelist', changelist]
+            args += [URL(url).quoted()]
+            return self('proplist', *args)
 
     def propget(self, name, url, rev='HEAD', depth='infinity', xml=True):
         pass
