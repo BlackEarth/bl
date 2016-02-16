@@ -8,14 +8,14 @@ from bl.url import URL
 class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
-    def __init__(self, url=None, local=None,
-            username=None, password=None, 
-            svn=None, svnmucc=None, svnlook=None,
-            trust_server_cert=True, access_file=None, log=print):
-        Dict.__init__(self, url=URL(url or ''), local=local,
-            username=username, password=password, 
+    def __init__(self, url=None, local=None, parent_path=None,
+            username=None, password=None, trust_server_cert=True, 
+            svn=None, svnmucc=None, svnlook=None, 
+            access_file=None, log=print):
+        Dict.__init__(self, url=URL(url or ''), local=local, parent_path=parent_path,
+            username=username, password=password, trust_server_cert=trust_server_cert, 
             svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
-            trust_server_cert=trust_server_cert, log_=log)
+            log_=log)
         if access_file is not None: # load the access file
             from .svn_access_file import SVNAccessFile
             self.access_file = SVNAccessFile(access_file)
