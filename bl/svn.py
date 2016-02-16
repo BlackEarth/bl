@@ -11,11 +11,11 @@ class SVN(Dict):
     def __init__(self, url=None, local=None,
             username=None, password=None, 
             svn=None, svnmucc=None, svnlook=None,
-            trust_server_cert=True, log=print):
+            trust_server_cert=True, access_file=None, log=print):
         Dict.__init__(self, url=URL(url or ''), local=local,
             username=username, password=password, 
             svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
-            trust_server_cert=trust_server_cert, log_=log)
+            trust_server_cert=trust_server_cert, access_file=access_file, log_=log)
 
     def __repr__(self):
         return "SVN(url='%s')" % self.url
