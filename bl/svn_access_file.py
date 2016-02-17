@@ -16,41 +16,48 @@ class SVNAccessFile(Config):
 
     def __init__(self, filename, **SVN):
         # turn off interpolation -- SVN itself doesn't use it
-        Config.__init__(self, filename, interpolation=None)
+        Config.__init__(self, filename, interpolation=None, split_list='\s*,\s*', join_list=', ')
         if self.aliases is None: 
             self.aliases = Dict()
         if self.groups is None: 
             self.groups = Dict()
+        for group in self.groups.keys():
+            if type(self.groups[group])==str:
+                self.groups[group] = re.split('\s*,\s*', self.groups[group])
         self.__dict__['__svn__'] = SVN
         
     def __repr__(self):
-        return "SVNAccessFile('%s')" % self.__file__
+        return "SVNAccessFile('%s')" % self.__filename__
 
-    def group_members(self, group, groups=None):
+    def add_user_to_group(self, user, group):
+        if group not in self.groups:
+            self.groups[group] = []
+        if user not in self.groups[group]:
+            self.groups[group].append(user)
+            self.write()
+
+    def remove_user_from_group(self, user, group):
+        if group in self.groups and user in self.groups[group]:
+            self.groups[group].remove(user)
+            self.write()
+
+    def group_members(self, group):
         """return a flat list of group members, with all aliases and subgroups expanded."""
         members = []
-        if groups is None: groups = self.groups_as_lists()
-        if groups.get(group) is not None:
-            for user in groups[group]:
+        if self.groups.get(group) is not None:
+            for user in self.groups[group]:
                 if user[:1]=='&':
                     alias = user[1:]
                     if self.aliases.get(alias) is not None and self.aliases[alias] not in members:
                         members.append(self.aliases[alias])
                 elif user[:1]=='@':
                     subgroup = user[1:]
-                    for member in self.group_members(subgroup, groups=groups):
+                    for member in self.group_members(subgroup):
                         if member not in members:
                             members.append(member)
                 elif user not in members:
                     members.append(user)
         return members
-
-    def groups_as_lists(self):
-        """create a temporary groups Dict in which each group is a list."""
-        groups = Dict()
-        for group in self.groups.keys():
-            groups[group] = re.split("\s*,\s*", self.groups[group])
-        return groups
 
     def match_sections(self, path):
         """For a given file path, return config sections that match."""
