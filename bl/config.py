@@ -1,5 +1,5 @@
 
-import os, re
+import os, re, time
 from configparser import ConfigParser, ExtendedInterpolation
 from bl.dict import Dict         # needed for dot-attribute notation
 
@@ -23,18 +23,20 @@ class Config(Dict):
     1
     """
 
-    def __init__(self, filename, interpolation=ExtendedInterpolation(), **kwargs):
+    def __init__(self, filename, interpolation=ExtendedInterpolation(), 
+                split_list=None, join_list=None, **kwargs):
         config = ConfigParser(interpolation=interpolation, **kwargs)
-        self.__dict__['__file__'] = filename
+        self.__dict__['__filename__'] = filename
+        self.__dict__['__join_list__'] = join_list
         if config.read(filename):
-            self.parse_config(config)
+            self.parse_config(config, split_list=split_list)
         else:
             raise KeyError("Config file not found at %s" % filename)
 
     def __repr__(self):
-        return "Config('%s')" % self.__file__
+        return "Config('%s')" % self.__filename__
 
-    def parse_config(self, config):
+    def parse_config(self, config, split_list=None):
         for s in config.sections():
             self[s] = Dict()
             for k, v in config.items(s):
@@ -49,11 +51,14 @@ class Config(Dict):
                     self[s][k] = eval(v)
                 elif re.match(DICT_PATTERN, v):                     # dict
                     self[s][k] = Dict(**eval(v))
+                elif split_list is not None \
+                and re.search(split_list, v) is not None:
+                    self[s][k] = re.split(split_list, v)
                 else:                                               # default: string
                     self[s][k] = v.strip()
 
-    def write(self, fn=None, sorted=True):
-        """write the contents of this config to fn or its __file__.
+    def write(self, fn=None, sorted=False, wait=0):
+        """write the contents of this config to fn or its __filename__.
         NOTE: All interpolations will be expanded in the written file.
         """
         config = ConfigParser(interpolation=None)
@@ -64,9 +69,25 @@ class Config(Dict):
             ks = self[key].keys()
             if sorted==True: ks.sort()
             for k in ks:
-                config[key][k] = str(self[key][k])
-        with open(fn or self.__file__, 'w') as f:
-            config.write(f)
+                if type(self[key][k])==list and self.__join_list__ is not None:
+                    config[key][k] = self.__join_list__.join(self[key][k])
+                else:
+                    config[key][k] = str(self[key][k])
+        print(fn, self.__dict__.get('__filename__'))
+        fn = fn or self.__dict__.get('__filename__')
+        # use advisory locking on this file
+        i = 0
+        while os.path.exists(fn+'.LOCK') and i < wait:
+            i += 1
+            time.sleep(1)
+        if os.path.exists(fn+'.LOCK'):
+            raise FileExistsError(fn + ' is locked for writing')
+        else:
+            with open(fn+'.LOCK', 'w') as lf:
+                lf.write(time.strftime("%Y-%m-%d %H:%M:%S %Z"))
+            with open(fn, 'w') as f:
+                config.write(f)
+            os.remove(fn+'.LOCK')
 
 
 if __name__ == "__main__":
