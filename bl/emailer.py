@@ -7,8 +7,10 @@ from bl.dict import Dict
 class Emailer(Dict):
     """create and send email using templates. Parameters (*=required):
         template*   : must have a render() or generate() method that takes keyword arguments
-        server      : The address of the mail server
-        port        : The port the server is listening on
+        template_path: the filesystem location in which to search for templates
+                    : (if given, the template argument can be a string)
+        host        : The address of the mail host
+        port        : The port the host is listening on
         from_address: The default From address
         to_address  : The default To address
         delivery    : 'smtp' sends it, 'test' returns the rendered message 
@@ -17,11 +19,16 @@ class Emailer(Dict):
         debug       : Whether debugging is on
     """
 
-    def __init__(self, template, server='127.0.0.1', port='25', delivery='test', debug='True', **params):
-        "set up an emailer with a particular config and template"
-        Dict.__init__(self, **params)
-        self.template = template
-        self.DEBUG = self.get('debug') and self.pop('debug') or None
+    def __init__(self, template, loader_class=None, **Email):
+        "set up an emailer with a particular template and Email config"
+        Dict.__init__(self, template=template, **Email)
+        if Email.template_path is not None:
+            if loader_class is None:
+                import tornado.template
+                loader_class = tornado.template.Loader
+            self.loader = loader_class(template_path)
+        if type(self.template)==str:
+            self.template = self.loader(template)
 
     def __repr__(self):
         return "Emailer(%r)" % (self.template)
@@ -69,9 +76,9 @@ class Emailer(Dict):
                     + (msg.get_all('Bcc') or [])
             try:
                 if self.port is not None:
-                    smtpclient = smtplib.SMTP(self.server or '127.0.0.1', self.port)
+                    smtpclient = smtplib.SMTP(self.host or '127.0.0.1', self.port)
                 else:
-                    smtpclient = smtplib.SMTP(self.server or '127.0.0.1')
+                    smtpclient = smtplib.SMTP(self.host or '127.0.0.1')
                 smtpclient.set_debuglevel(self.DEBUG and 1 or 0)    # non-zero gives us exceptions when emailing.
                 if self.username is not None and self.password is not None:
                     smtpclient.login(self.username, self.password)
