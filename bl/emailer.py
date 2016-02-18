@@ -22,11 +22,11 @@ class Emailer(Dict):
             debug       : Whether debugging is on
     """
 
-    def __init__(self, loader_class=None, log=print, **Email):
+    def __init__(self, loader_class=None, loader_args={}, log=print, **Email):
         """set up an emailer with a particular Email config"""
         Dict.__init__(self, log=log, **Email)
-        if Email.template_path is not None and loader_class is not None:
-            self.loader = loader_class(Email.template_path)
+        if Email.get('template_path') is not None and loader_class is not None:
+            self.loader = loader_class(Email.get('template_path'), **loader_args)
 
     def __repr__(self):
         return "Emailer(%r)" % (self.__file__)
