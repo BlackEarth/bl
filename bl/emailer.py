@@ -6,7 +6,7 @@ from bl.dict import Dict
 
 class Emailer(Dict):
     """create and send email using templates. Parameters (*=required):
-        template*       : must have a render() or generate() method that takes keyword arguments
+        template*       : must have a render() method that takes keyword arguments
                             (if loader_class and Email.template_path are both given, 
                                 template can be a relative path)
         loader_class    : the class used to load templates (defaults to tornado.template.Loader).
@@ -24,20 +24,23 @@ class Emailer(Dict):
 
     def __init__(self, template_path=None, loader_class=None, log=print, **Email):
         """set up an emailer with a particular Email config"""
-        Dict.__init__(self, **Email)
+        Dict.__init__(self, log=log, **Email)
         if template_path is not None and loader_class is not None:
             self.loader = loader_class(template_path)
 
     def __repr__(self):
-        return "Emailer(%r)" % (self.template)
+        return "Emailer(%r)" % (self.__file__)
 
     def render(self, template, **context):
         """render the emailer template with the given context."""
-        if type(self.template)==str and self.loader is not None:
-            self.template = self.loader(template)
-        render_method = self.template.__dict__.get('render') or self.template.__dict__.get('generate')
-        r = render_method(c=Dict(**context))
-        if type(r)=='bytes': r = r.decode('UTF-8')
+        if type(template)==str and self.loader is not None:
+            template = self.loader.load(template)
+        try:
+            r = template.render(**context)
+        except:
+            r = template.generate(**context)
+        if type(r)==type(b''): r = r.decode('UTF-8')
+        return r
 
     def message(self, template, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
         """create a MIMEText message from the msg text with the given msg args"""
@@ -55,9 +58,7 @@ class Emailer(Dict):
     def send_message(self, template, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
         return self.send(
             self.message(template,
-                to_addr=to_addr, from_addr=from_addr, cc=cc, bcc=bcc, 
-                subject=subject, 
-                **context))
+                to_addr=to_addr, from_addr=from_addr, cc=cc, bcc=bcc, subject=subject, **context))
 
     def send(self, msg):
         """send the given msg and return the status of the delivery.
