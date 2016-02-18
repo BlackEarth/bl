@@ -6,49 +6,42 @@ from bl.dict import Dict
 
 class Emailer(Dict):
     """create and send email using templates. Parameters (*=required):
-        template*   : must have a render() or generate() method that takes keyword arguments
-        template_path: the filesystem location in which to search for templates
-                    : (if given, the template argument can be a string)
-        host        : The address of the mail host
-        port        : The port the host is listening on
-        from_address: The default From address
-        to_address  : The default To address
-        delivery    : 'smtp' sends it, 'test' returns the rendered message 
-        username    : username for smtp auth
-        password    : password for smtp auth
-        debug       : Whether debugging is on
+        template*       : must have a render() or generate() method that takes keyword arguments
+                            (if loader_class and Email.template_path are both given, 
+                                template can be a relative path)
+        loader_class    : the class used to load templates (defaults to tornado.template.Loader).
+        Email           : parameters from the Email config.
+            template_path: the filesystem location in which to search for templates
+            host        : The address of the mail host
+            port        : The port the host is listening on
+            from_address: The default From address
+            to_address  : The default To address
+            delivery    : 'smtp' sends it, 'test' returns the rendered message 
+            username    : username for smtp auth
+            password    : password for smtp auth
+            debug       : Whether debugging is on
     """
 
-    def __init__(self, template, loader_class=None, **Email):
-        "set up an emailer with a particular template and Email config"
-        Dict.__init__(self, template=template, **Email)
-        if Email.template_path is not None:
-            if loader_class is None:
-                import tornado.template
-                loader_class = tornado.template.Loader
+    def __init__(self, template_path=None, loader_class=None, log=print, **Email):
+        """set up an emailer with a particular Email config"""
+        Dict.__init__(self, **Email)
+        if template_path is not None and loader_class is not None:
             self.loader = loader_class(template_path)
-        if type(self.template)==str:
-            self.template = self.loader(template)
 
     def __repr__(self):
         return "Emailer(%r)" % (self.template)
 
-    def send_message(self, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
-        return self.send(
-            self.message(
-                to_addr=to_addr, from_addr=from_addr, cc=cc, bcc=bcc, 
-                subject=subject, 
-                **context))
-
-    def render(self, **context):
+    def render(self, template, **context):
         """render the emailer template with the given context."""
+        if type(self.template)==str and self.loader is not None:
+            self.template = self.loader(template)
         render_method = self.template.__dict__.get('render') or self.template.__dict__.get('generate')
         r = render_method(c=Dict(**context))
         if type(r)=='bytes': r = r.decode('UTF-8')
 
-    def message(self, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
-        "create a MIMEText message from the msg text with the given msg args"
-        msg = MIMEText(self.render(to_addr=to_addr or self.to_address, from_addr=from_addr, cc=cc, bcc=bcc, **context))
+    def message(self, template, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
+        """create a MIMEText message from the msg text with the given msg args"""
+        msg = MIMEText(self.render(template, to_addr=to_addr or self.to_address, from_addr=from_addr, cc=cc, bcc=bcc, **context))
         msg['From'] = from_addr or self.from_address
         msg['Subject'] = subject
         for addr in (to_addr or self.to_address or '').split(','):
@@ -58,6 +51,13 @@ class Emailer(Dict):
         for addr in (bcc or '').split(','):
             msg.add_header('Bcc', addr.strip())
         return msg
+
+    def send_message(self, template, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
+        return self.send(
+            self.message(template,
+                to_addr=to_addr, from_addr=from_addr, cc=cc, bcc=bcc, 
+                subject=subject, 
+                **context))
 
     def send(self, msg):
         """send the given msg and return the status of the delivery.
@@ -87,7 +87,7 @@ class Emailer(Dict):
                 smtpclient.quit()
             except:
                 if self.DEBUG==True: 
-                    traceback.print_exc()
+                    self.log(traceback.format_exc())
                 else:
-                    print("Emailer exception:", sys.exc_info()[1], file=sys.stderr)
+                    self.log("Emailer exception:", sys.exc_info()[1], file=sys.stderr)
                 return sys.exc_info()[1]        # return the exception rather than raising it -- the show must go on.        
