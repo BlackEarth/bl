@@ -108,8 +108,8 @@ class User(Model):
     def before_insert_or_update(self):
         if self.name is not None:
             self.name = re.sub('[^\w\s\.\-_]+', r'', self.name, flags=re.U)
-        if self.password is not None:
-            self.set_password(self.pop.password())
+        if self.password is not None and self.password.strip() != '':
+            self.set_password(self.pop('password'))
     
     def verify(self, id, key):
         """verify the given id & key, returning any errors that occur."""
