@@ -28,14 +28,17 @@ LOWERCASE_WORDS = {
 class String(str):
     """our own str string class that adds several useful methods"""
     
-    def digest(self, alg='sha256', b64=True):
+    def digest(self, alg='sha256', b64=True, strip=True):
         "return a url-safe base64-encoded hash of the string"
         import base64, hashlib
         h = hashlib.new(alg)
         h.update(str(self).encode('utf-8'))
         if b64==True:
             # this returns a string with a predictable amount of = padding at the end
-            return base64.urlsafe_b64encode(h.digest()).decode('ascii')
+            b = base64.urlsafe_b64encode(h.digest()).decode('ascii')
+            if strip==True:
+                b = b.rstrip('=')
+            return b
         else:
             return h.hexdigest()
 
