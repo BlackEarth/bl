@@ -20,10 +20,17 @@ class XBuilder(Dict):
     def __init__(self, default=None, nsmap=None, **namespaces):
         Dict.__init__(self)
         for k in namespaces:        # each namespace gets its own method, named k (for each k)
-            self[k] = ElementMaker(namespace=namespaces[k], nsmap=nsmap or {k:namespaces[k]})
+            kdefault = default or namespaces[k]
+            if nsmap is None:
+                knsmap = {None:kdefault}
+                knsmap.update(**{km:namespaces[km] for km in namespaces if namespaces[km]!=kdefault})
+            self[k] = ElementMaker(namespace=namespaces[k], nsmap=nsmap or knsmap)
         if default is not None:
             # create an ElementMaker that uses the given namespace as the default
-            self._ = ElementMaker(namespace=default, nsmap=nsmap or {None:default})
+            if nsmap is None:
+                knsmap = {None:default}
+                knsmap.update(**{km:namespaces[km] for km in namespaces if namespaces[km]!=default})            
+            self._ = ElementMaker(namespace=default, nsmap=nsmap or knsmap)
         else:
             # make elements with no namespace by default
             self._ = ElementMaker() 
