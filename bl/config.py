@@ -70,7 +70,7 @@ class Config(Dict):
             if sorted==True: ks.sort()
             for k in ks:
                 if type(self[key][k])==list and self.__join_list__ is not None:
-                    config[key][k] = self.__join_list__.join(self[key][k])
+                    config[key][k] = self.__join_list__.join([v for v in self[key][k] if v!=''])
                 else:
                     config[key][k] = str(self[key][k])
         print(fn, self.__dict__.get('__filename__'))
