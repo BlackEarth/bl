@@ -22,7 +22,7 @@ class XML(File):
             self.root = etree.fromstring(root, parser=parser)
         elif root is not None:
             self.root = root
-        elif type(fn) in [str, bytes] and os.path.isfile(fn):                          # read from fn
+        elif type(fn) in [str, bytes]:                          # read from fn
             tree = etree.parse(fn, parser=parser)
             self.root = tree.getroot()
             self.info = self.get_info(tree=tree)
@@ -131,51 +131,41 @@ class XML(File):
         tag = tag or self.root.tag
         schemas = schemas or self.schemas
         rngfn = Schema.filename(tag, schemas, ext='.rng')
-        if rngfn is None or not os.path.exists(rngfn) or rebuild==True:          # .rnc => .rng
+        if not os.path.exists(rngfn) or rebuild==True:          # .rnc => .rng
             rncfn = Schema.filename(tag, schemas, ext='.rnc')
-            if rncfn is not None and os.path.exists(rncfn):
+            if os.path.exists(rncfn):
                 rngfn = Schema(rncfn).trang(ext='.rng')
-        if rngfn is not None and os.path.exists(rngfn):
-            return etree.RelaxNG(etree.parse(rngfn))
+        return etree.RelaxNG(etree.parse(rngfn))
 
-    def assertValid(self, tag=None, schemas=None, validator=None):
-        validator = validator or self.Validator(tag=tag, schemas=schemas)
+    def assertValid(self, tag=None, schemas=None):
+        validator = self.Validator(tag=tag, schemas=schemas)
         validator.assertValid(self.root)
     
-    def validate(self, tag=None, schemas=None, validator=None, jing=True):
+    def validate(self, tag=None, schemas=None):
         try:
-            validator = validator or self.Validator(tag=tag, schemas=schemas)
-            if validator is None:
-                return 'No validator available'
-            self.assertValid(tag=tag, schemas=schemas, validator=validator)
+            self.assertValid(tag=tag, schemas=schemas)
         except:
-            result = str(sys.exc_info()[1])     # result from lxml validator
-            if jing==True:
-                result += '\n' + self.jing()        # result from jing validator
-            return result
+            return sys.exc_info()[1]
 
-    def isvalid(self, tag=None, schemas=None, validator=None):
+    def isvalid(self, tag=None, schemas=None):
         try:
-            validator = validator or self.Validator(tag=tag, schemas=schemas)
-            if validator is None:
-                return None
-            else:
-                self.assertValid(tag=tag, schemas=schemas)
-                return True
+            self.assertValid(tag=tag, schemas=schemas)
+            return True
         except:
             return False
 
     def jing(self, tag=None, schemas=None, ext='.rnc'):
         """use the (included) jing library to validate the XML."""
         from . import JARS
-        jing_jar = os.path.join(JARS, 'jing.jar')
+        jingfn = os.path.join(JARS, 'jing.jar')
         schemas = schemas or self.schemas
-        schemafn = Schema.filename(tag or self.root.tag, schemas, ext=ext)
+        schemafn = Schema.filename(tag, schemas, ext=ext)
         try:
-            return subprocess.check_output(['java', '-jar', jing_jar, '-c', schemafn, self.fn])
+            subprocess.check_output(['java', '-jar', jingfn, '-c', schemafn, self.fn])
         except subprocess.CalledProcessError as e:
             tbtext = html.unescape(str(e.output, 'UTF-8'))
-            return tbtext
+            raise RuntimeError("XML.jing() failure:\n"
+                + tbtext).with_traceback(sys.exc_info()[2]) from None
 
     # == NAMESPACE == 
 
@@ -189,6 +179,11 @@ class XML(File):
         """return the namespace for a given tag, or '' if no namespace given"""
         md = re.match("^(?:\{([^\}]*)\})?", tag)
         return md.group(1) or md.group(0)
+
+    @classmethod
+    def tag_name(cls, tag):
+        """return the name of the tag, with the namespace removed"""
+        return re.sub("{"+cls.tag_namespace(tag)+"}", "", tag)
 
     # == TRANSFORMATIONS == 
 

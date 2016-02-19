@@ -52,7 +52,7 @@ class Schema(Text):
             Also accepts an Element 'tag' with namespace prepended in {braces}."""
         md = re.match("^\{?(?:[^:]+:/{0,2})?([^\}]+)\}?", namespace)
         if md is not None:
-            dirname = md.group(1).replace("/", "_").replace(":", "_")
+            dirname = re.sub("[/:\.]", '_', md.group(1))
         else:
             dirname = ''
         return dirname
