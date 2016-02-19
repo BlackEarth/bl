@@ -4,8 +4,8 @@ from bl.file import File
 
 class Text(File):
 
-    def __init__(self, fn=None, text=None, encoding='UTF-8', **args):
-        File.__init__(self, fn=fn, encoding=encoding, **args)
+    def __init__(self, fn=None, text=None, encoding='UTF-8', log=print, **args):
+        File.__init__(self, fn=fn, encoding=encoding, log=log, **args)
         if text is not None:
             self.text = text
         elif fn is not None and os.path.exists(fn):
