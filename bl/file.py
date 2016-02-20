@@ -26,11 +26,9 @@ class File(Dict):
         subprocess.call(['open', fn], shell=True)
 
     def read(self, mode='rb'):
-        if DEBUG==True: 
-            self.log("File.read(mode='%s'):" % mode, self.fn )
-        f = open(self.fn, mode) 
-        data=f.read()
-        f.close()
+        if DEBUG==True: self.log("File.read(mode='%s'):" % mode, self.fn )
+        with open(self.fn, mode) as f:
+            data = f.read()
         return data
 
     def dirpath(self):
