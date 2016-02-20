@@ -89,6 +89,11 @@ class DOCX(ZIP):
                     config=x.config)
         return x
 
+    def metadata(self):
+        """return a cp:metadata element with the metadata in the document"""
+        xml = self.xml(src="docProps/core.xml")
+        return xml.root
+
     def stylemap(self, definitions=True, all=True, cache=False):
         """return a dictionary of styles from .docx word/styles.xml, keyed to the id
         (the id is used in the .docx word/document.xml rather than the style names; 
@@ -221,16 +226,17 @@ class DOCX(ZIP):
         return s
 
     @classmethod
-    def value_to_unit(C, val, point_div, unit):
-        "converts a Word value to a given unit, using the point divisor given"
+    def value_to(C, val, unit, factor=1.):
+        "converts a Word value to a given unit, using the factor given"
         from bl import scss
-        return round(float((float(val)/point_div)*scss.pt/unit), 2)*unit
+        val = float(val) * factor
+        return round(float(val*scss.pt/unit), 2)*unit
 
     def stylesheet(self, fn=None, log=print):
         "create an SCSS stylesheet in a Text document, using DOCX.stylemap(), above."
         from bl import scss
-        SPACE_PTS_DIV = 20.  # divide Word space values by 20 to get the number of points
-        FONT_PTS_DIV = 2.    # divide Word font size values by 2 to get the number of points
+        SPACE_PTS_FACTOR = 1/30.  # divide Word space values by 20 to get the number of points
+        FONT_PTS_FACTOR = 1/2.    # divide Word font size values by 2 to get the number of points
         styles = self.stylemap(definitions=True, all=True, cache=False)
         all_styles = self.stylemap(all=False, cache=False)
         ss = scss.SCSS(fn=fn or (self.fn and self.fn.replace('.docx', '.scss')) or None)
@@ -256,13 +262,13 @@ class DOCX(ZIP):
                 if j == 'spacing':
                     for k in prop.keys():
                         if k=='after': 
-                            ss.styles[sel]["margin-bottom:"] = DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["margin-bottom:"] = DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k=='before': 
-                            ss.styles[sel]["margin-top:"] = DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["margin-top:"] = DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k in ['beforeAutospacing', 'afterAutospacing']:
                             pass
                         elif k=='line':
-                            ss.styles[sel]["line-spacing:"] = DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["line-spacing:"] = DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k=='lineRule':
                             pass
                         else:
@@ -276,10 +282,10 @@ class DOCX(ZIP):
                                 log(i, j, k, prop[k])
                         else:
                             log(i, j, k, prop[k])
-                elif j=='sz':
+                elif j in ['sz', 'szCs']:
                     for k in prop.keys():
                         if k=='val':
-                            ss.styles[sel]["font-size:"] = DOCX.value_to_unit(prop[k], FONT_PTS_DIV, scss.percent)
+                            ss.styles[sel]["font-size:"] = DOCX.value_to(prop[k], scss.pt, factor=FONT_PTS_FACTOR)
                         else:
                             log(i, j, k, prop[k])
                 elif j=='rFonts':
@@ -292,26 +298,26 @@ class DOCX(ZIP):
                 elif j=='ind':
                     for k in prop.keys():
                         if k=='firstLine':
-                            ss.styles[sel]["text-indent:"] = DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["text-indent:"] = DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k=='left':
                             if ss.styles[sel].get("margin-left:") is None:
                                 ss.styles[sel]["margin-left:"] = 0*scss.pt
-                            ss.styles[sel]["margin-left:"] += DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["margin-left:"] += DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k=='right':
-                            ss.styles[sel]["margin-right:"] = DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["margin-right:"] = DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         elif k=='hanging':
                             if ss.styles[sel].get("margin-left:") is None:
                                 ss.styles[sel]["margin-left:"] = 0*scss.pt
-                            ss.styles[sel]["margin-left:"] += DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
-                            ss.styles[sel]["text-indent:"] = -DOCX.value_to_unit(prop[k], SPACE_PTS_DIV, scss.em)
+                            ss.styles[sel]["margin-left:"] += DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
+                            ss.styles[sel]["text-indent:"] = -DOCX.value_to(prop[k], scss.pt, factor=SPACE_PTS_FACTOR)
                         else:
                             log(i, j, k, prop[k])
-                elif j=='b':
+                elif j in ['b', 'bCs']:
                     if prop.val=='0':
                         ss.styles[sel]["font-weight:"] = "normal"
                     else:
                         ss.styles[sel]["font-weight:"] = "bold"
-                elif j=='i':
+                elif j in ['i', 'iCs']:
                     if prop.val=='0':
                         ss.styles[sel]["font-style:"] = "normal"
                     else:
@@ -328,6 +334,8 @@ class DOCX(ZIP):
                 elif j=='textAlignment':
                     if prop.val=='baseline':
                         ss.styles[sel]["vertical-align:"] = "baseline"
+                    elif prop.val=='center':
+                        ss.styles[sel]['text-align:'] = 'center'
                     else:
                         log(i, j, k, prop[k])
                 elif j=='vertAlign':
@@ -358,10 +366,10 @@ class DOCX(ZIP):
                 elif j=='color':
                     if prop.val != 'auto':
                         ss.styles[sel]["color:"] = "#%s" % prop.val
-                elif j in ['szCs', 'autoSpaceDN', 'autoSpaceDE', 'tabs', 
-                        'adjustRightInd', 'widowControl', 'bCs', 'outlineLvl',
-                        'keepLines', 'lang', 'ligatures', 'numForm', 'numSpacing', 
-                        'u']:
+                elif j in ['autoSpaceDN', 'autoSpaceDE', 'tabs', 'spacing', 'contextualSpacing',
+                        'suppressLineNumbers', 'suppressAutoHyphens', 'overflowPunct',
+                        'adjustRightInd', 'widowControl', 'outlineLvl', 'w',
+                        'keepLines', 'lang', 'ligatures', 'numForm', 'numPr', 'numSpacing',]:
                     pass
                 else:
                     log(i, j, prop)
