@@ -84,6 +84,25 @@ class URL(Dict):
     def __repr__(self):
         return """URL('%s')""" % str(self)
 
+    def basename(self):
+        return str(self).split('/')[-1]
+
+    def parent(self):
+        u = '/'.join(str(self).split('/')[:-1])
+        s = u.strip('/').split(':')
+        if len(s)==2 and s[1]=='':
+            return None
+        else:
+            return self.__class__(url=u)
+
+    @classmethod
+    def join(C, *args):
+        print(args)
+        u = C(url='/'.join([str(arg).strip('/') for arg in args]))
+        if u.scheme in [None, '']:
+            u.path = '/' + u.path
+        return u
+
 
 if __name__=='__main__':
     import doctest

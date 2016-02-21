@@ -8,14 +8,15 @@ from bl.url import URL
 class SVN(Dict):
     "direct interface to a Subversion repository using svn and svnmucc via subprocess"
 
-    def __init__(self, url=None, local=None, parent_path=None,
+    def __init__(self, log=print, 
+            url=None, local=None, parent_path=None,
             username=None, password=None, trust_server_cert=True, 
             svn=None, svnmucc=None, svnlook=None, 
-            access_file=None, log=print):
-        Dict.__init__(self, url=URL(url or ''), local=local, parent_path=parent_path,
+            access_file=None):
+        Dict.__init__(self, log_=log, 
+            url=URL(url or ''), local=local, parent_path=parent_path,
             username=username, password=password, trust_server_cert=trust_server_cert, 
-            svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook',
-            log_=log)
+            svn=svn or 'svn', svnmucc=svnmucc or 'svnmucc', svnlook=svnlook or 'svnlook')
         if access_file is not None: # load the access file
             from .svn_access_file import SVNAccessFile
             self.access_file = SVNAccessFile(access_file)
@@ -41,15 +42,15 @@ class SVN(Dict):
         for arg in modargs:
             # if --revision HEAD, just omit the argument, because svnlook doesn't like or need it.
             if arg=='--revision' and modargs[modargs.index(arg)+1]=='HEAD':
-                _=modargs.pop(modargs.index(arg)+1)
-                _=modargs.pop(modargs.index(arg))
+                modargs.remove(modargs.index(arg)+1)
+                modargs.remove(modargs.index(arg))
         return self._subprocess(self.svnlook or 'svnlook', *modargs)
 
     def _subprocess(self, cmd, *args):
         """uses subprocess.check_output to get and return the output of svn or svnmucc,
         or raise an error if the cmd raises an error.
         """
-        stderr = tempfile.NamedTemporaryFile()
+        stderr, stderr_name = tempfile.mkstemp()
         cmdlist = [cmd]
         if 'svnlook' not in cmd:
             cmdlist += ['--non-interactive']
@@ -61,12 +62,12 @@ class SVN(Dict):
                 cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
-        self.log_(' '.join(cmdlist))
+        self.log_("['" + "', '".join(cmdlist) + "']")
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
         except subprocess.CalledProcessError as e:
-            f = open(stderr.name, 'r+b')
-            output = f.read(); f.close()
+            with open(stderr_name, 'rb') as f:
+                output = f.read()
             raise RuntimeError(str(output, 'utf-8')
                 ).with_traceback(sys.exc_info()[2]) from None
         return res
@@ -145,12 +146,13 @@ class SVN(Dict):
         args += [URL(u).quoted() for u in list(urls)]
         self('lock', *args)
 
-    def log(self, url, revs='HEAD:1', search=None, verbose=True, xml=True):
-        args = ['--revision', revs]
+    def log(self, url=None, rev='HEAD:1', search=None, verbose=True, xml=True):
+        url = URL(url or self.url)
+        args = ['--revision', rev]
         if search is not None: args += ['--search', search]
         if verbose==True: args.append('--verbose')
         if xml==True: args.append('--xml')
-        args.append(URL(url).quoted())
+        args.append(url.quoted())
         return self('log', *args)
 
     def mkdir(self, url, msg='', parents=True):
@@ -197,7 +199,6 @@ class SVN(Dict):
         if self.local not in [None, '']:
             # fast: svnlook cat
             path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
-            self.log_(path)
             args += [self.local, path]
             return etree.XML(self.look('proplist', *args))
         else:

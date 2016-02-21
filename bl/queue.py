@@ -15,11 +15,13 @@ but there is no synchronization between the processes; each process picks up the
 
 class Queue(Dict):
 
-    def __init__(self, path, outpath=None, log=print, debug=False, **args):
+    def __init__(self, path, inpath=None, outpath=None, log=print, debug=False, **args):
         if not os.path.exists(path): os.makedirs(path)
-        if outpath is None: outpath = path + '.OUT'
+        if inpath is None: inpath = path + '/IN'
+        if not os.path.exists(inpath): os.makedirs(inpath)
+        if outpath is None: outpath = path + '/OUT'
         if not os.path.exists(outpath): os.makedirs(outpath)
-        Dict.__init__(self, path=path, outpath=outpath, log=log, debug=debug, **args)
+        Dict.__init__(self, path=path, inpath=inpath, outpath=outpath, log=log, debug=debug, **args)
         self.log("[%s] init %r" % (self.timestamp(), self.__class__))
 
     def __repr__(self):
@@ -42,7 +44,7 @@ class Queue(Dict):
         ext     : the extension of the queue entry filename (default '.json') 
         """
         qfn = os.path.join(self.path, "%s%s-%.5f%s%s" 
-            % (prefix, time.strftime("%Y%m%d.%H%M%S.%f"), random.random(), suffix, ext))
+            % (prefix, time.strftime("%Y%m%d.%H%M%S"), random.random(), suffix, ext))
         qf = Text(fn=qfn, text=text)
         qf.write()
         return qfn
@@ -67,17 +69,19 @@ class Queue(Dict):
 
             # ensure that another queue process has not and will not process this entry.
             try:
-                newfn = os.path.join(outpath, os.path.basename(fn))
-                os.rename(fn, newfn)
+                infn = os.path.join(self.inpath, os.path.basename(fn))
+                os.rename(fn, infn)
             except:
-                self.log("-- doesn't exist; already processed")
+                self.log(sys.exc_info()[1])
                 continue
 
             # process this entry
             try:
-                self.process_entry(newfn)
-            except exception:
-                self.handle_exception(fn=fn, exception=exception)
+                self.process_entry(infn)
+                outfn = os.path.join(self.outpath, os.path.basename(fn))
+                os.rename(infn, outfn)
+            except:
+                self.handle_exception(fn=fn)
 
     def process_entry(self, fn):
         """override this method to define how your subclass queue processes entries.
@@ -85,7 +89,7 @@ class Queue(Dict):
         """
         self.log("process_entry():", fn)
 
-    def handle_exception(self, fn=None, exception=exception):
+    def handle_exception(self, fn=None):
         """Handle exceptions that occur during queue script execution.
         (Override this method to implement your own exception handling.)
         fn          : the filename of the queue entry.
