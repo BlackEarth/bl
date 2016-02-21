@@ -1,6 +1,6 @@
 # interface to subversion repository
 
-import os, subprocess, tempfile, sys
+import os, subprocess, tempfile, traceback, sys
 from lxml import etree
 from bl.dict import Dict
 from bl.url import URL
@@ -42,15 +42,15 @@ class SVN(Dict):
         for arg in modargs:
             # if --revision HEAD, just omit the argument, because svnlook doesn't like or need it.
             if arg=='--revision' and modargs[modargs.index(arg)+1]=='HEAD':
-                modargs.remove(modargs.index(arg)+1)
-                modargs.remove(modargs.index(arg))
+                modargs.remove(modargs[modargs.index(arg)+1])
+                modargs.remove(arg)
         return self._subprocess(self.svnlook or 'svnlook', *modargs)
 
     def _subprocess(self, cmd, *args):
         """uses subprocess.check_output to get and return the output of svn or svnmucc,
         or raise an error if the cmd raises an error.
         """
-        stderr, stderr_name = tempfile.mkstemp()
+        stderr = tempfile.NamedTemporaryFile()
         cmdlist = [cmd]
         if 'svnlook' not in cmd:
             cmdlist += ['--non-interactive']
@@ -62,15 +62,17 @@ class SVN(Dict):
                 cmdlist += ['--password', self.password]
         cmdlist += list(args)
         cmdlist = list(cmdlist)
-        self.log_("['" + "', '".join(cmdlist) + "']")
+        # self.log_("['" + "', '".join(cmdlist) + "']")
+        os.chdir(os.environ.get('HOME'))    # svn bug: svn needs os.curdir to be something sensible.
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
+            return res
         except subprocess.CalledProcessError as e:
-            with open(stderr_name, 'rb') as f:
+            with open(stderr.name, 'r') as f:
                 output = f.read()
-            raise RuntimeError(str(output, 'utf-8')
-                ).with_traceback(sys.exc_info()[2]) from None
-        return res
+            self.log_(traceback.format_exc())
+            self.log_(output)
+            raise RuntimeError(output).with_traceback(sys.exc_info()[2]) from None
 
     # == USER API COMMANDS == 
 
