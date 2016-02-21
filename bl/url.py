@@ -97,7 +97,6 @@ class URL(Dict):
 
     @classmethod
     def join(C, *args):
-        print(args)
         u = C(url='/'.join([str(arg).strip('/') for arg in args]))
         if u.scheme in [None, '']:
             u.path = '/' + u.path
