@@ -368,6 +368,34 @@ class XML(File):
         new_elem = etree.fromstring(s)
         return new_elem
 
+    @classmethod
+    def merge_contiguous(C, node, xpath, namespaces=None):
+        """Within a given node, merge elements that are next to each other 
+        if they have the same tag and attributes.
+        """
+        new_node = deepcopy(node)
+        elems = XML.xpath(new_node, xpath, namespaces=namespaces)
+        elems.reverse()
+        for elem in elems:
+            next = elem.getnext()
+            if elem.attrib == {}: 
+                XML.replace_with_contents(elem)
+            elif elem.tail in [None, ''] and next is not None \
+            and elem.tag==next.tag and elem.attrib==next.attrib:
+                # merge next with elem
+                # -- append next.text to elem last child tail
+                if len(elem.getchildren()) > 0:
+                    lastch = elem.getchildren()[-1]
+                    lastch.tail = (lastch.tail or '') + (next.text or '')
+                else:
+                    elem.text = (elem.text or '') + (next.text or '')
+                # -- append next children to elem children
+                for ch in next.getchildren():
+                    elem.append(ch)
+                # -- remove next
+                XML.remove(next, leave_tail=True)
+        return new_node
+
     # == Nesting Manipulations == 
 
     @classmethod
