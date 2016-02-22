@@ -63,7 +63,7 @@ class SVN(Dict):
         cmdlist += list(args)
         cmdlist = list(cmdlist)
         # self.log_("['" + "', '".join(cmdlist) + "']")
-        os.chdir(os.environ.get('HOME'))    # svn bug: svn needs os.curdir to be something sensible.
+        os.chdir(os.environ.get('HOME') or self.parent_path)    # svn bug: svn needs os.curdir to be something sensible.
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
             return res
