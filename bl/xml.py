@@ -7,6 +7,7 @@ from bl.file import File
 from bl.id import random_id
 from bl.string import String
 from .schema import Schema
+import tempfile
 
 class XML(File):
 
@@ -145,7 +146,7 @@ class XML(File):
         try:
             self.assertValid(tag=tag, schemas=schemas)
         except:
-            return sys.exc_info()[1]
+            return str(sys.exc_info()[1])
 
     def isvalid(self, tag=None, schemas=None):
         try:
@@ -158,14 +159,25 @@ class XML(File):
         """use the (included) jing library to validate the XML."""
         from . import JARS
         jingfn = os.path.join(JARS, 'jing.jar')
+        tag = tag or self.root.tag
         schemas = schemas or self.schemas
         schemafn = Schema.filename(tag, schemas, ext=ext)
-        try:
-            subprocess.check_output(['java', '-jar', jingfn, '-c', schemafn, self.fn])
-        except subprocess.CalledProcessError as e:
-            tbtext = html.unescape(str(e.output, 'UTF-8'))
-            raise RuntimeError("XML.jing() failure:\n"
-                + tbtext).with_traceback(sys.exc_info()[2]) from None
+        if schemafn is not None:
+            try:
+                fn = self.fn
+                tempf = None
+                if fn is None:
+                    tempf = tempfile.NamedTemporaryFile()
+                    tempf.write(etree.tounicode(self.root).encode('utf-8'))
+                    fn = tempf.name
+                self.log("fn = %s, tag = %s, schema = %s" % (self.fn, tag, schemafn))
+                subprocess.check_output(['java', '-jar', jingfn, '-c', schemafn, fn])
+                if tempf is not None:
+                    tempf.close()
+            except subprocess.CalledProcessError as e:
+                tbtext = html.unescape(str(e.output, 'UTF-8'))
+                raise RuntimeError("XML.jing() failure:\n"
+                    + tbtext).with_traceback(sys.exc_info()[2]) from None
 
     # == NAMESPACE == 
 
