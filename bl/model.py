@@ -248,12 +248,6 @@ class Model(Record):
         return self.select_one(cursor=cursor, 
             **{k:self[k] for k in self.pk}) is not None
 
-    def before_insert_or_update_update(self, reload=True, cursor=None, **kwargs):
-        if not self.exists(cursor=cursor):
-            self.insert(reload=reload, cursor=cursor, **kwargs)
-        else:
-            self.commit(reload=reload, cursor=cursor, **kwargs)
-
     def insert(self, reload=True, cursor=None, **kwargs):
         """insert the current instance into its relation."""
         for k in list(kwargs.keys()): self[k] = kwargs[k]
