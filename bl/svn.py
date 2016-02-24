@@ -123,22 +123,26 @@ class SVN(Dict):
         args += [src_path, URL(dest_url).quoted()]
         return self('import', *args)
 
-    def info(self, url, rev='HEAD', depth='empty', verbose=True, xml=True):
+    def info(self, url, rev='HEAD', peg=None, depth='empty', verbose=True, xml=True):
+        url = URL(url).quoted()
+        if peg is not None: url += '@'+peg
         args = ['--revision', rev, '--depth', depth]
         if xml==True: args.append('--xml')
         if verbose==True and xml!=True: 
             args.append('--verbose')
-        args.append(URL(url).quoted())
+        args.append(url)
         return self('info', *args)
 
-    def list(self, url, rev='HEAD', depth='infinity',
+    def list(self, url, rev='HEAD', peg=None, depth='infinity',
                 verbose=True, xml=True):
+        url = URL(url).quoted()
+        if peg is not None: url += '@'+peg
         args = ['--revision', rev, '--depth', depth]
         if xml==True: 
             args.append('--xml')
         if verbose==True and xml != True: 
             args.append('--verbose')
-        args.append(URL(url).quoted())
+        args.append(url)
         return self('list', *args)
 
     def lock(self, *urls, msg='', force=False): 
@@ -148,13 +152,17 @@ class SVN(Dict):
         args += [URL(u).quoted() for u in list(urls)]
         self('lock', *args)
 
-    def log(self, url=None, rev='HEAD:1', search=None, verbose=True, xml=True):
-        url = URL(url or self.url)
-        args = ['--revision', rev]
+    def log(self, url=None, rev=None, peg=None, search=None, verbose=True, xml=True):
+        url = URL(url or self.url).quoted()
+        if peg is not None:
+            url += '@' + peg
+        args = []
+        if rev is not None:
+            args += ['--revision', rev]
         if search is not None: args += ['--search', search]
         if verbose==True: args.append('--verbose')
         if xml==True: args.append('--xml')
-        args.append(url.quoted())
+        args.append(url)
         return self('log', *args)
 
     def mkdir(self, url, msg='', parents=True):
