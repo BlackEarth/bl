@@ -63,7 +63,8 @@ class SVN(Dict):
         cmdlist += list(args)
         cmdlist = list(cmdlist)
         # self.log_("['" + "', '".join(cmdlist) + "']")
-        os.chdir(os.environ.get('HOME') or self.parent_path)    # svn bug: svn needs os.curdir to be something sensible.
+        # The following overcomes a bug in svn: svn needs os.curdir to be something sensible.
+        os.chdir(os.environ.get('HOME') or self.parent_path)
         try:
             res = subprocess.check_output(cmdlist, stderr=stderr)
             return res
@@ -76,19 +77,32 @@ class SVN(Dict):
 
     # == USER API COMMANDS == 
 
-    def cat(self, url, rev='HEAD'):
+    def cat(self, url, rev=None, peg=None):
         if self.local not in [None, '']:
             # fast: svnlook cat
             path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
+            args = ['cat']
+            if rev is not None: args += ['--revision', rev]
+            args += [self.local, path]
             return self.look('cat', '--revision', rev, self.local, path)
         else:
             # slow: svn cat
-            args = ['--revision', rev, URL(url).quoted()]
+            url = URL(url).quoted()
+            if peg is not None or rev is not None:
+                url += '@'+(peg or rev).split(':')[-1]
+            args = []
+            if rev is not None: args += ['--revision', rev] 
+            args += [url]
             return self('cat', *args)
 
-    def copy(self, src_url, dest_url, msg='', rev='HEAD'):
-        args = ['--revision', rev, '--message', msg, 
-                URL(src_url).quoted(), URL(dest_url).quoted()]
+    def copy(self, src_url, dest_url, msg='', rev=None, peg=None):
+        src_url = URL(src_url).quoted()
+        dest_url = URL(dest_url).quoted()
+        if peg is not None or rev is not None:
+            src_url += '@'+(peg or rev).split(':')[-1]
+        args = []
+        if rev is not None: args += ['--revision', rev]
+        args += ['--message', msg, src_url, dest_url]
         return self('copy', *args)
 
     def delete(self, *urls, msg='', force=False):
@@ -101,21 +115,26 @@ class SVN(Dict):
     def diff(self, *args):
         return self('diff', *args)
 
-    def export(self, src_url, dest_path, rev='HEAD', depth='infinity', pegrev=None):
-        if pegrev is not None:
-            src_url += '@'+pegrev
-        args = ['--revision', rev, '--depth', depth, 
-                URL(src_url).quoted(), dest_path]
+    def export(self, src_url, dest_path, rev=None, peg=None, depth='infinity'):
+        src_url = URL(src_url).quoted()
+        if peg is not None or rev is not None:
+            src_url += '@'+(peg or rev).split(':')[-1]
+        args = []
+        if rev is not None: args += ['--revision', rev]
+        args += ['--depth', depth, src_url, dest_path]
         return self('export', *args)
 
-    def filesize(self, url, rev='HEAD'):
+    def filesize(self, url, rev=None, peg=None):
         if self.local not in [None, '']:
             # fast: svnlook filesize
             path = os.path.relpath(URL(url).unquoted(), str(self.url.unquoted()))
-            return int(self.look('filesize', '--revision', rev, self.local, path))
+            args = []
+            if rev is not None: args += ['--revision', rev]
+            args += [self.local, path]
+            return int(self.look('filesize', *args))
         else:
             # slow: svn cat
-            return len(self.cat(url, rev=rev))
+            return len(self.cat(url, rev=rev, peg=peg))
 
     def importe(self, src_path, dest_url, msg='', depth='infinity', force=False):
         args = ['--message', msg, '--depth', depth]
@@ -123,21 +142,26 @@ class SVN(Dict):
         args += [src_path, URL(dest_url).quoted()]
         return self('import', *args)
 
-    def info(self, url, rev='HEAD', peg=None, depth='empty', verbose=True, xml=True):
+    def info(self, url, rev=None, peg=None, depth='empty', verbose=True, xml=True):
         url = URL(url).quoted()
-        if peg is not None: url += '@'+peg
-        args = ['--revision', rev, '--depth', depth]
+        if peg is not None or rev is not None:
+            url += '@'+(peg or rev).split(':')[-1]
+        args = []
+        if rev is not None: args += ['--revision', rev.split(':')[0]]
+        args += ['--depth', depth]
         if xml==True: args.append('--xml')
         if verbose==True and xml!=True: 
             args.append('--verbose')
         args.append(url)
         return self('info', *args)
 
-    def list(self, url, rev='HEAD', peg=None, depth='infinity',
-                verbose=True, xml=True):
+    def list(self, url, rev=None, peg=None, depth='infinity', verbose=True, xml=True):
         url = URL(url).quoted()
-        if peg is not None: url += '@'+peg
-        args = ['--revision', rev, '--depth', depth]
+        if peg is not None or rev is not None:
+            url += '@'+(peg or rev).split(':')[-1]
+        args = []
+        if rev is not None: args += ['--revision', rev.split(':')[0]]
+        ['--depth', depth]
         if xml==True: 
             args.append('--xml')
         if verbose==True and xml != True: 
@@ -154,8 +178,8 @@ class SVN(Dict):
 
     def log(self, url=None, rev=None, peg=None, search=None, verbose=True, xml=True):
         url = URL(url or self.url).quoted()
-        if peg is not None:
-            url += '@' + peg
+        if peg is not None or rev is not None:
+            url += '@'+(peg or rev).split(':')[-1]
         args = []
         if rev is not None:
             args += ['--revision', rev]
@@ -172,12 +196,17 @@ class SVN(Dict):
         args.append(URL(url).quoted())
         return self('mkdir', *args)
 
-    def move(self, src_url, dest_url, msg='',
-            rev='HEAD', force=False):
-        args = ['--revision', rev, '--message', msg]
+    def move(self, src_url, dest_url, msg='', rev=None, peg=None, force=False):
+        src_url = URL(src_url).quoted()
+        dest_url = URL(dest_url).quoted()
+        if peg is not None or rev is not None:
+            url += '@'+(peg or rev).split(':')[-1]
+        args = []
+        if rev is not None: args += ['--revision', rev]
+        args += ['--message', msg]
         if force==True: 
             args.append('--force')
-        args += [URL(src_url).quoted(), URL(dest_url).quoted()]
+        args += [src_url, dest_url]
         return self('move', *args)
 
     def put(self, path, dest_url, msg=''):
@@ -200,9 +229,11 @@ class SVN(Dict):
 
     # == Properties == 
 
-    def proplist(self, url, rev='HEAD', depth='infinity', 
+    def proplist(self, url, rev=None, peg=None, depth='infinity', 
             xml=True, verbose=True, inherited=True, changelist=None):
-        args = ['--revision', rev] 
+        url = URL(url).quoted()
+        args = []
+        if rev is not None: args += ['--revision', rev] 
         if xml==True: args += ['--xml']
         if verbose==True: args += ['--verbose']
         if inherited==True: args += ['--show-inherited-props']
@@ -212,23 +243,22 @@ class SVN(Dict):
             args += [self.local, path]
             return etree.XML(self.look('proplist', *args))
         else:
+            if peg is not None or rev is not None:
+                url += '@'+(peg or rev).split(':')[-1]                
             if changelist is not None: args += ['--changelist', changelist]
-            args += [URL(url).quoted()]
+            args += [url]
             return self('proplist', *args)
 
-    def propget(self, name, url, rev='HEAD', depth='infinity', xml=True):
+    def propget(self, name, url, rev=None, peg=None, depth='infinity', xml=True):
         pass
 
-    def propset(self, name, url, rev='HEAD', msg='', 
-                depth='infinity', force=False):
+    def propset(self, name, url, msg='', depth='infinity', force=False):
         pass
 
-    def propdel(self, name, url, rev=None, 
-                depth='infinity'):
+    def propdel(self, name, url, depth='infinity'):
         pass
 
-    def propedit(self, name, url, rev=None, msg='', 
-                force=False):
+    def propedit(self, name, url, rev=None, msg='', force=False):
         pass
 
 if __name__ == '__main__':
