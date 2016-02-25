@@ -20,7 +20,7 @@ class File(Dict):
             if abs(size) < 1024.0:
                 return "%3.1f %s%s" % (size, unit, suffix)
             size /= 1024.0
-        return "%.1f%s%s" % (size, 'Y', suffix)
+        return "%.1f %s%s" % (size, 'Y', suffix)
 
     def open(self):
         subprocess.call(['open', fn], shell=True)
