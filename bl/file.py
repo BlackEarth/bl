@@ -15,6 +15,7 @@ class File(Dict):
 
     @classmethod
     def readable_size(C, size, suffix='B'):
+        if size is None: return
         size = float(size)
         for unit in ['','K','M','G','T','P','E','Z']:
             if abs(size) < 1024.0:
