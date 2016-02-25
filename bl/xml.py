@@ -1,5 +1,5 @@
 
-import os, re, time, sys, subprocess, html, json, tempfile
+import os, re, time, sys, subprocess, html, json, tempfile, traceback
 from copy import deepcopy
 from lxml import etree
 from bl.dict import Dict
@@ -142,11 +142,19 @@ class XML(File):
         validator = self.Validator(tag=tag, schemas=schemas)
         validator.assertValid(self.root)
     
-    def validate(self, tag=None, schemas=None):
-        try:
-            self.assertValid(tag=tag, schemas=schemas)
-        except:
-            return str(sys.exc_info()[1])
+    def validate(self, tag=None, schemas=None, jing=True, relax=False):
+        errors = []
+        if relax==True:
+            try:
+                self.assertValid(tag=tag, schemas=schemas)
+            except:
+                errors += [str(sys.exc_info()[1]).strip()]
+        if jing==True:
+            try:
+                self.jing(tag=tag, schemas=schemas)
+            except:
+                errors += str(sys.exc_info()[1]).split('\n')
+        return errors
 
     def isvalid(self, tag=None, schemas=None):
         try:
@@ -176,8 +184,7 @@ class XML(File):
                     tempf.close()
             except subprocess.CalledProcessError as e:
                 tbtext = html.unescape(str(e.output, 'UTF-8'))
-                raise RuntimeError("XML.jing() failure:\n"
-                    + tbtext).with_traceback(sys.exc_info()[2]) from None
+                raise RuntimeError(tbtext).with_traceback(sys.exc_info()[2]) from None
 
     # == NAMESPACE == 
 
