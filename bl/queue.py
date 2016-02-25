@@ -15,13 +15,13 @@ but there is no synchronization between the processes; each process picks up the
 
 class Queue(Dict):
 
-    def __init__(self, path, inpath=None, outpath=None, log=print, debug=False, **args):
+    def __init__(self, path, ingpath=None, outpath=None, log=print, debug=False, **args):
         if not os.path.exists(path): os.makedirs(path)
-        if inpath is None: inpath = path + '/IN'
-        if not os.path.exists(inpath): os.makedirs(inpath)
+        if ingpath is None: ingpath = path + '/ING'
+        if not os.path.exists(ingpath): os.makedirs(ingpath)
         if outpath is None: outpath = path + '/OUT'
         if not os.path.exists(outpath): os.makedirs(outpath)
-        Dict.__init__(self, path=path, inpath=inpath, outpath=outpath, log=log, debug=debug, **args)
+        Dict.__init__(self, path=path, ingpath=ingpath, outpath=outpath, log=log, debug=debug, **args)
         self.log("[%s] init %r" % (self.timestamp(), self.__class__))
 
     def __repr__(self):
@@ -69,7 +69,7 @@ class Queue(Dict):
 
             # ensure that another queue process has not and will not process this entry.
             try:
-                infn = os.path.join(self.inpath, os.path.basename(fn))
+                infn = os.path.join(self.ingpath, os.path.basename(fn))
                 os.rename(fn, infn)
             except:
                 self.log(sys.exc_info()[1])
