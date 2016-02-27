@@ -41,7 +41,7 @@ class SVN(Dict):
         modargs = [arg for arg in args]
         for arg in modargs:
             # if --revision HEAD, just omit the argument, because svnlook doesn't like or need it.
-            if arg=='--revision' and modargs[modargs.index(arg)+1]=='HEAD':
+            if arg=='--revision' and modargs[modargs.index(arg)+1] in ['HEAD', None]:
                 modargs.remove(modargs[modargs.index(arg)+1])
                 modargs.remove(arg)
         return self._subprocess(self.svnlook or 'svnlook', *modargs)
