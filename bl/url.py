@@ -49,12 +49,18 @@ class URL(Dict):
             else:
                 self.qargs[k] = qargs[k]
 
+    def __call__(self, **args):
+        """return the url with the given modifications."""
+        u = URL(str(self))
+        u.update(**args)
+        return u
+
     def qstring(self):
         return urllib.parse.urlencode(self.qargs)
 
     def no_qargs(self):
         u = URL(**self)
-        u.qargs = {}
+        u.qargs = Dict()
         return u
 
     def drop_qarg(self, key):
