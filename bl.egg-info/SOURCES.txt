@@ -12,10 +12,12 @@ bl/git.py
 bl/id.py
 bl/image.py
 bl/integer.py
+bl/json.py
 bl/log.py
 bl/migration.py
 bl/model.py
 bl/pdf.py
+bl/pysvn.py
 bl/queue.py
 bl/record.py
 bl/recordset.py
@@ -25,6 +27,8 @@ bl/schema.py
 bl/scss.py
 bl/string.py
 bl/svn.py
+bl/svn_access_file.py
+bl/svn_access_file_test.py
 bl/text.py
 bl/url.py
 bl/user.py
