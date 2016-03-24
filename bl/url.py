@@ -50,7 +50,7 @@ class URL(Dict):
                 self.qargs[k] = qargs[k]
 
     def __call__(self, **args):
-        """return the url with the given modifications."""
+        """return a new url with the given modifications (immutable design)."""
         u = URL(str(self))
         u.update(**args)
         return u

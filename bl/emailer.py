@@ -76,6 +76,7 @@ class Emailer(Dict):
         elif self.delivery == 'smtp':
             # parse the message and send it
             fromaddr = msg['From']
+            if self.debug==True: self.log("From =", fromaddr)
             tolist = [addr for addr in
                       (msg.get_all('To') or []) 
                       + (msg.get_all('Cc') or []) 
@@ -90,6 +91,7 @@ class Emailer(Dict):
                 if self.username is not None and self.password is not None:
                     smtpclient.login(self.username, self.password)
                 for toaddr in tolist:
+                    if self.debug==True: self.log("To =", toaddr)
                     smtpclient.sendmail(fromaddr, toaddr, msg.as_string())
                 smtpclient.quit()
             except:
