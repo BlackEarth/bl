@@ -42,9 +42,11 @@ class Emailer(Dict):
         if type(r)==type(b''): r = r.decode('UTF-8')
         return r
 
-    def message(self, template, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
+    def message(self, template=None, text=None, to_addr=None, subject=None, from_addr=None, cc=None, bcc=None, **context):
         """create a MIMEText message from the msg text with the given msg args"""
-        msg = MIMEText(self.render(template, to_addr=to_addr or self.to_address, from_addr=from_addr, cc=cc, bcc=bcc, **context))
+        if template is not None:
+            text = self.render(template, to_addr=to_addr or self.to_address, from_addr=from_addr, cc=cc, bcc=bcc, **context)
+        msg = MIMEText(text)
         msg['From'] = from_addr or self.from_address
         msg['Subject'] = subject
         for addr in (to_addr or self.to_address or '').split(','):
@@ -80,14 +82,14 @@ class Emailer(Dict):
                     smtpclient = smtplib.SMTP(self.host or '127.0.0.1', self.port)
                 else:
                     smtpclient = smtplib.SMTP(self.host or '127.0.0.1')
-                smtpclient.set_debuglevel(self.DEBUG and 1 or 0)    # non-zero gives us exceptions when emailing.
+                smtpclient.set_debuglevel(self.debug and 1 or 0)    # non-zero gives us exceptions when emailing.
                 if self.username is not None and self.password is not None:
                     smtpclient.login(self.username, self.password)
                 for toaddr in tolist:
                     smtpclient.sendmail(fromaddr, toaddr, msg.as_string())
                 smtpclient.quit()
             except:
-                if self.DEBUG==True: 
+                if self.debug==True: 
                     self.log(traceback.format_exc())
                 else:
                     self.log("Emailer exception:", sys.exc_info()[1], file=sys.stderr)
