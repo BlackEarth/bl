@@ -1,6 +1,6 @@
 {
   "name": "bl",
-  "version": "0.3",
+  "version": "0.6.0",
   "description": "Black Earth core library",
   "url": "https://github.com/BlackEarth/bl",
   "author": "Sean Harrison",
@@ -11,7 +11,7 @@
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
-    "Programming Language :: Python :: 3.4"
+    "Programming Language :: Python :: 3"
   ],
   "entry_points": {},
   "install_requires": [],
