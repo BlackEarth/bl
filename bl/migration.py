@@ -1,5 +1,5 @@
 
-import os, time
+import os, time, traceback
 from glob import glob
 from bl.model import Model
 
@@ -36,12 +36,15 @@ class Migration(Model):
                 description = script.split("\n")[0].strip('-#/*; ') # first line is the description
                 log('', id+ext, ':', description)
                 cursor = db.cursor()
-                if ext=='.sql':                                     # script is a SQL script, db.execute it
-                    db.execute(script, cursor=cursor)
-                else:                                               # script is system script, subprocess it
-                    subprocess.check_output(script, {'db': db})
-                migration = M(db, id=id, description=description)
-                migration.insert(cursor=cursor)
-                cursor.connection.commit()
+                try:
+                    if ext=='.sql':                                     # script is a SQL script, db.execute it
+                        db.execute(script, cursor=cursor)
+                    else:                                               # script is system script, subprocess it
+                        subprocess.check_output(script, {'db': db})
+                    migration = M(db, id=id, description=description)
+                    migration.insert(cursor=cursor)
+                    cursor.connection.commit()
+                except:
+                    cursor.connection.rollback()
+                    raise
                 cursor.close()
-
