@@ -25,7 +25,9 @@ class Emailer(Dict):
     def __init__(self, loader_class=None, loader_args={}, log=print, **Email):
         """set up an emailer with a particular Email config"""
         Dict.__init__(self, log=log, **Email)
-        if Email.get('template_path') is not None and loader_class is not None:
+        if loader_class is None:
+            from tornado.template import Loader as loader_class
+        if Email.get('template_path') is not None:
             self.loader = loader_class(Email.get('template_path'), **loader_args)
 
     def __repr__(self):
@@ -49,11 +51,11 @@ class Emailer(Dict):
         msg = MIMEText(text)
         msg['From'] = from_addr or self.from_address
         msg['Subject'] = subject
-        for addr in (to_addr or self.to_address or '').split(','):
+        for addr in [addr for addr in (to_addr or self.to_address or '').split(',') if addr.strip() != '']:
             msg.add_header('To', addr.strip())
-        for addr in (cc or '').split(','):
+        for addr in [addr for addr in (cc or '').split(',') if addr.strip() != '']:
             msg.add_header('Cc', addr.strip())
-        for addr in (bcc or '').split(','):
+        for addr in [addr for addr in (bcc or '').split(',') if addr.strip() != '']:
             msg.add_header('Bcc', addr.strip())
         return msg
 
@@ -74,9 +76,11 @@ class Emailer(Dict):
         elif self.delivery == 'smtp':
             # parse the message and send it
             fromaddr = msg['From']
-            tolist = (msg.get_all('To') or []) \
-                    + (msg.get_all('Cc') or []) \
-                    + (msg.get_all('Bcc') or [])
+            tolist = [addr for addr in
+                      (msg.get_all('To') or []) 
+                      + (msg.get_all('Cc') or []) 
+                      + (msg.get_all('Bcc') or [])
+                      if addr is not None and addr.strip() != '']
             try:
                 if self.port is not None:
                     smtpclient = smtplib.SMTP(self.host or '127.0.0.1', self.port)
