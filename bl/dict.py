@@ -22,14 +22,11 @@ class Dict(dict):
     {'a': 1, 'b': 2, 'c': 3, 'd': 4}
     """
 
-    def __init__(xCqNck7t, __prefix__=None, **kwargs):
-        # the crazy random name for self here is necessary to avoid key conflicts with "self" 
+    def __init__(xCqNck7t, **kwargs):
+        # the random name for self here is necessary to avoid key conflicts with "self" 
         # (used as a key, e.g., in the WordPress API)
         dict.__init__(xCqNck7t)
-        if __prefix__ is not None:
-            xCqNck7t.update_from_prefix(__prefix__, **kwargs)
-        else:
-            xCqNck7t.update(**kwargs)        
+        xCqNck7t.update(**kwargs)        
 
     def __call__(xCqNck7t, *args, **kwargs):
         """Dict(key=val) creates a new dict with the key:val. That has always been true for 
@@ -63,8 +60,6 @@ class Dict(dict):
                 xCqNck7t[k] = Dict(**kwargs[k])
             elif type(kwargs[k])==list:
                 xCqNck7t[k] = dict_list_val(kwargs[k])
-            elif type(kwargs[k])==bytes:
-                xCqNck7t[k] = kwargs[k].decode('UTF-8')
             else:
                 xCqNck7t[k] = kwargs[k]
 
@@ -106,8 +101,7 @@ class Dict(dict):
 
     def keys(self, key=None, reverse=False):
         """sort the keys before returning them"""
-        ks = list(dict.keys(self))
-        ks.sort(key=key, reverse=reverse)
+        ks = sorted(list(dict.keys(self)), key=key, reverse=reverse)
         return ks
         
     def values(self, key=None, reverse=False):
@@ -121,7 +115,7 @@ class Dict(dict):
   
 class StringDict(Dict):
     def __getattr__(self, name):
-        return dict.get(self, name) or ""       # returns "" if the key is not found.
+        return Dict.get(self, name) or ""       # returns "" if the key is not found.
 
 if __name__ == "__main__":
     import doctest
