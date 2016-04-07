@@ -7,6 +7,7 @@ import os
 from bl.dict import Dict
 
 class ZIP(Dict):
+    """zipfile wrapper"""
 
     def __init__(self, fn=None, mode='r', compression=ZIP_DEFLATED, log=print, **args):
         Dict.__init__(self, fn=fn, mode=mode, compression=compression, log=log, **args)
