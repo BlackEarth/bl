@@ -1,12 +1,12 @@
 
-import os, sys
+import os, sys, time
+from bl.dict import Dict
 
-class Log:
+class Log(Dict):
     "log file, which appends to the file rather than reading"
 
     def __init__(self, fn=None, echo=False):
-        self.fn = fn
-        self.echo = echo
+        super().__init__(fn=fn, echo=echo)
 
     def write(self, string):
         self.__call__(string, end='')
@@ -36,8 +36,7 @@ class Log:
         if os.path.exists(self.fn):
             os.remove(self.fn)
 
-    def timestamp(self):
-        # return a timestamp string for the current time
-        from time import strftime
-        return strftime("%Y-%m-%d %H:%M:%S %Z")
+    @classmethod
+    def timestamp(C):
+        return time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
