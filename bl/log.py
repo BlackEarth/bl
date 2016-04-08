@@ -3,7 +3,7 @@ import os, sys, time
 from bl.dict import Dict
 
 class Log(Dict):
-    "log file, which appends to the file rather than reading"
+    """log file, which appends to the file rather than reading"""
 
     def __init__(self, fn=None, echo=False):
         super().__init__(fn=fn, echo=echo)

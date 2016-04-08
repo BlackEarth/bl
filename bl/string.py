@@ -29,7 +29,11 @@ class String(str):
     """our own str string class that adds several useful methods"""
     
     def digest(self, alg='sha256', b64=True, strip=True):
-        "return a url-safe base64-encoded hash of the string"
+        """return a url-safe hash of the string, optionally (and by default) base64-encoded
+            alg='sha256'    = the hash algorithm, must be in hashlib
+            b64=True        = whether to base64-encode the output
+            strip=True      = whether to strip trailing '=' from the base64 output
+        """
         import base64, hashlib
         h = hashlib.new(alg)
         h.update(str(self).encode('utf-8'))
@@ -75,6 +79,7 @@ class String(str):
         return String(outstring)
 
     def tagify(self):
+        """lowercase, hyphen-separated string, useful for XML tags."""
         return self.nameify().lower()
 
     def nameify(self, camelsplit=False):
@@ -89,7 +94,7 @@ class String(str):
         outstring = str(self)
         outstring = re.sub("&[^;]*?;", ' ', outstring)                          # entities
         outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
-        outstring = re.sub("\W+", '-', outstring).strip(' -')
+        outstring = re.sub("\W+", '-', outstring).strip(' -')                   # collapse multiple
         return String(outstring)
 
     def camelsplit(self):
@@ -103,7 +108,6 @@ class String(str):
                 or (outstring[i].isnumeric() 
                     and outstring[i-1].isalpha())):
                 outstring = outstring[:i] + ' ' + outstring[i:]
-
         return String(outstring.strip())
 
     def words(self):
@@ -128,7 +132,7 @@ class String(str):
         s, n = re.subn(pattern, repl, self, count=count, flags=flags)
         return (String(s), n)
 
-    # In addition, we need to override a lot of common string methods to return a String() rather than str
+    # override common string methods to return String() rather than str
     def capitalize(self): return String(str.capitalize(self))
     def casefold(self): return String(str.casefold(self))
     def center(self, *args): return String(str.center(self, *args))

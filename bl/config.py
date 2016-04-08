@@ -11,6 +11,9 @@ class Config(Dict):
     """class for holding application configuration in an Ini file. Sample Usage:
     >>> cf_filename = os.path.join(os.path.dirname(__file__), "config_test.ini")
     >>> cf = Config(cf_filename)
+    >>> cf.filename
+    >>> cf.__dict__['__filename__'] == os.path.join(os.path.dirname(__file__), "config_test.ini")
+    True
     >>> cf.Archive.path             # basic string conversion
     '/data/files'
     >>> cf.Test.debug               # boolean 

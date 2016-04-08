@@ -1,15 +1,14 @@
 # zip.py - class for handling ZIP files
 
-DEBUG = False
-
 from zipfile import ZipFile, ZIP_DEFLATED
 import os
 from bl.dict import Dict
+from bl.log import Log
 
 class ZIP(Dict):
     """zipfile wrapper"""
 
-    def __init__(self, fn=None, mode='r', compression=ZIP_DEFLATED, log=print, **args):
+    def __init__(self, fn=None, mode='r', compression=ZIP_DEFLATED, log=Log(), **args):
         Dict.__init__(self, fn=fn, mode=mode, compression=compression, log=log, **args)
         if fn is not None:
             self.zipfile = ZipFile(self.fn, mode=mode, compression=compression)
@@ -23,8 +22,7 @@ class ZIP(Dict):
         self.zipfile.close()
 
     @classmethod
-    def zip_path(CLASS, path, fn=None, mode='w', exclude=[], log=print):
-        if DEBUG==True: log("zip_path():", path)
+    def zip_path(CLASS, path, fn=None, mode='w', exclude=[], log=Log()):
         if fn is None:
             fn = path+'.zip'
         zipf = CLASS(fn, mode=mode).zipfile
@@ -32,7 +30,6 @@ class ZIP(Dict):
             dirfn = walk_tuple[0]
             for fp in walk_tuple[-1]:
                 walkfn = os.path.join(dirfn, fp)
-                if DEBUG==True: log('  ', os.path.relpath(walkfn, path))
                 if os.path.relpath(walkfn, path) not in exclude:
                     zipf.write(walkfn, os.path.relpath(walkfn, path))
         zipf.close()

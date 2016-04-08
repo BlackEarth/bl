@@ -8,7 +8,8 @@ PATTERN = r"""\b((?:[a-z][\w\-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]
 REGEXP = re.compile(PATTERN, re.I+re.U)
 
 class URL(Dict):
-    """Sample usage:
+    """URL object class. Makes handling URLs very easy. Holds the URL in parsed, unquoted form internally.
+    Sample usage:
     >>> u = URL('http://blackearth.us:8888/this/is;really?not=something#important')
     >>> u.scheme, u.host, u.path, u.params, u.qargs, u.fragment
     ('http', 'blackearth.us:8888', '/this/is', 'really', {'not': 'something'}, 'important')
@@ -96,15 +97,17 @@ class URL(Dict):
         return """URL('%s')""" % str(self)
 
     def basename(self):
-        return str(self).split('/')[-1]
+        """return the basename of the URL's path"""
+        return self.path.split('/')[-1]
 
     def parent(self):
-        u = '/'.join(str(self).split('/')[:-1])
-        s = u.strip('/').split(':')
+        """return the parent URL, with params, query, and fragment in place"""
+        path = '/'.join(self.path.split('/')[:-1])
+        s = path.strip('/').split(':')
         if len(s)==2 and s[1]=='':
             return None
         else:
-            return self.__class__(url=u)
+            return self.__class__(self, path=path)
 
     @classmethod
     def finditer(C, text):
@@ -112,8 +115,9 @@ class URL(Dict):
         return REGEXP.finditer(text)
 
     @classmethod
-    def join(C, *args):
-        u = C(url='/'.join([str(arg).strip('/') for arg in args]))
+    def join(C, *args, **kwargs):
+        """join a list of url elements, and include any keyword arguments, as a new URL"""
+        u = C('/'.join([str(arg).strip('/') for arg in args]), **kwargs)
         if u.scheme in [None, '']:
             u.path = '/' + u.path
         return u

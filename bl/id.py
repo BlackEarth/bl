@@ -1,27 +1,27 @@
 
 """Create a variety of different random ids.
 
-id.random_id() returns a random_id with the given parameters
+id.random_id() returns a random_id with the given parameters.
 
-id.hex_chars is 16 characters long, so you need a much longer string for the same level of security, 
-    but some contexts need hex.
+id.hex_chars is 16 characters long, so you need a much longer string for the 
+same level of security, but some contexts need hex.
     + 16^8 = 4.3 billion unique ids.
 
-id.alphanum_chars is 62 characters long, so it is plenty for uniqueness and non-discoverability for 
-    most circumstances. For example:
+id.alphanum_chars is 62 characters long, so it is plenty for uniqueness and 
+non-discoverability for most circumstances. For example:
     + 62^6 = 5.68e10, which is the length of a bit.ly id (56.8 billion unique URLs).
     + 62^16 = 4.77e28, which is huge 
     + 62^32 = 2.27e57, which is overkill by a lot -- we'll never get a repeat, and we can test for it.
 
-id.id_chars is id.alphanum_chars with confusing ones removed, 
-    so the set is a respectable 54 characters long.
+id.id_chars is id.alphanum_chars with confusing ones removed, so the set is a 
+respectable 54 characters long.
 
-id.punct_chars has most ascii punctuation
+id.punct_chars has most ascii punctuation.
 
-id.ascii_chars = id.alphanum_chars + id.punct_chars
+id.ascii_chars = id.alphanum_chars + id.punct_chars.
 
-urlslug_chars adds to id.alphanum_chars certain punctuation that is allowed in urls. 73 characters
-    This is useful for URL shorteners.
+urlslug_chars adds to id.alphanum_chars certain punctuation that is allowed 
+in urls. 73 characters. This is useful for URL shorteners.
     + 73^4 = 28.4 million unique URL slugs. 
     + So a private URL shortener can be like the following:
         - www.tld.to/YpH0

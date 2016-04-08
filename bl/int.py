@@ -1,7 +1,7 @@
 
 class Int(int):
 
-    def to_roman(self):
+    def roman(self):
         num = self
         roman=''
         table=[['M',1000], ['CM',900], ['D',500], ['CD',400],
