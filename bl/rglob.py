@@ -2,7 +2,7 @@
 import os
 from glob import glob, escape
 
-def rglob(dirname, pattern, dirs=False, sort=True, key=None, reverse=None):
+def rglob(dirname, pattern, dirs=False, sort=True):
     """recursive glob, gets all files that match the pattern within the directory tree"""
     fns = glob(os.path.join(dirname, pattern))
     dns = [fn for fn 
@@ -14,5 +14,5 @@ def rglob(dirname, pattern, dirs=False, sort=True, key=None, reverse=None):
     for d in dns:
         fns += rglob(d, pattern)
     if sort==True:
-        fns.sort(key=key, reverse=reverse)
+        fns.sort()
     return fns
