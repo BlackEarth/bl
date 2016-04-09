@@ -26,9 +26,11 @@ class Config(Dict):
     1
     """
 
-    def __init__(self, filename, interpolation=ExtendedInterpolation(), 
+    Interpolation = ExtendedInterpolation()
+
+    def __init__(self, filename, interpolation=None, 
                 split_list=None, join_list=None, **kwargs):
-        config = ConfigParser(interpolation=interpolation, **kwargs)
+        config = ConfigParser(interpolation=interpolation or self.Interpolation, **kwargs)
         self.__dict__['__filename__'] = filename
         self.__dict__['__join_list__'] = join_list
         if config.read(filename):
