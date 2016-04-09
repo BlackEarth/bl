@@ -1,6 +1,6 @@
 
 import os, re, time
-from configparser import ConfigParser, ExtendedInterpolation
+from configparser import ConfigParser, BasicInterpolation, ExtendedInterpolation
 from bl.dict import Dict         # needed for dot-attribute notation
 
 LIST_PATTERN = "^\[\s*([^,]*)\s*(,\s*[^,]*)*,?\s*\]$"
