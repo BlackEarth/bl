@@ -28,15 +28,17 @@ class Config(Dict):
 
     Interpolation = ExtendedInterpolation()
 
-    def __init__(self, filename, interpolation=None, 
-                split_list=None, join_list=None, **kwargs):
-        config = ConfigParser(interpolation=interpolation or self.Interpolation, **kwargs)
-        self.__dict__['__filename__'] = filename
+    def __init__(self, fn=None, interpolation=None, 
+                split_list=None, join_list=None, **params):
+        config = ConfigParser(interpolation=interpolation or self.Interpolation)
+        self.__dict__['__filename__'] = fn
         self.__dict__['__join_list__'] = join_list
-        if config.read(filename):
-            self.parse_config(config, split_list=split_list)
-        else:
-            raise KeyError("Config file not found at %s" % filename)
+        if fn is not None:
+            if config.read(fn):
+                self.parse_config(config, split_list=split_list)
+            else:
+                raise KeyError("Config file not found at %s" % fn)
+        self.update(**params)
 
     def __repr__(self):
         return "Config('%s')" % self.__filename__
@@ -78,7 +80,6 @@ class Config(Dict):
                     config[key][k] = self.__join_list__.join([v for v in self[key][k] if v!=''])
                 else:
                     config[key][k] = str(self[key][k])
-        print(fn, self.__dict__.get('__filename__'))
         fn = fn or self.__dict__.get('__filename__')
         # use advisory locking on this file
         i = 0
@@ -94,6 +95,41 @@ class Config(Dict):
                 config.write(f)
             os.remove(fn+'.LOCK')
 
+class ConfigTemplate(Config):
+    """load the config with interpolation=None, so as to provide a template"""
+    Interpolation = None
+
+    def expects(self):
+        """returns a Dict of params that this ConfigTemplate expects to receive"""
+        params = Dict()
+        regex = re.compile("(?<![\{\$])\{([^\{\}]+)\}")
+        for block in self.keys():
+            for key in self[block].keys():
+                for param in re.findall(regex, self[block][key]):
+                    b, k = param.split('.')
+                    if b not in params: params[b] = Dict()
+                    params[b][k] = None
+        return params
+
+    def render(self, fn=None, prompt=False, **params):
+        """return a Config with the given params formatted via str.format(**params).
+        fn=None         : If given, will assign this filename to the rendered Config.
+        prompt=False    : If True, will prompt for any param that is None.
+        """
+        if prompt==True:
+            for block in params.keys():
+                for key in params[block].keys():
+                    if params[block][key] is None:
+                        params[block][key] = input("%s.%s: " % (block, key))
+        config = Config(**self)
+        if fn is None: 
+            fn = self.__dict__.get('__filename__')
+        if fn is not None:
+            config.__dict__['__filename__'] = os.path.splitext(fn)[0]
+        for block in config.keys():
+            for key in config[block].keys():
+                config[block][key] = config[block][key].format(**params)
+        return config
 
 if __name__ == "__main__":
     import doctest
