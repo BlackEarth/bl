@@ -118,6 +118,7 @@ class ConfigTemplate(Config):
         """
         from getpass import getpass
         expected_params = self.expects()
+        params = Dict(**params)
         if prompt==True:
             for block in expected_params.keys():
                 if block not in params.keys():
@@ -136,6 +137,34 @@ class ConfigTemplate(Config):
             for key in config[block].keys():
                 config[block][key] = config[block][key].format(**params)
         return config
+
+def configure_package(path, packages=[], template_name='config.ini.TEMPLATE', 
+        config_name='config.ini', **config_params):
+    """configure the package at the given path with a config template and file.
+    packages        = a list of packages to search for config templates
+    config_params   = a dict containing config param blocks.
+    """
+    import importlib
+
+    # create a ConfigTemplate from the config.ini.TEMPLATE in each dependency module.
+    # "first precedence": The first package in the packages list to include a particular config block
+    # is the one that defines that block.
+    config_template = ConfigTemplate()
+    for package in packages:
+        module = importlib.import_module(package)
+        ct_fn = os.path.join(os.path.dirname(module.__file__), template_name)
+        if os.path.exists(ct_fn):
+            ct = ConfigTemplate(fn=ct_fn)
+            for key in ct.keys():
+                if key not in config_template.keys():
+                    config_template[key] = ct[key]
+
+    config_template.write(fn=os.path.join(path, template_name))
+
+    # render the config
+    config = config_template.render(prompt=True, **config_params)
+    config.write(fn=os.path.join(path, config_name))
+    return Config(os.path.join(path, config_name))
 
 if __name__ == "__main__":
     if len(sys.argv) == 0 or sys.argv[0]=='test':
