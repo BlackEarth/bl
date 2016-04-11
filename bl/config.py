@@ -1,5 +1,5 @@
 
-import os, re, time
+import os, re, sys, time
 from configparser import ConfigParser, BasicInterpolation, ExtendedInterpolation
 from bl.dict import Dict         # needed for dot-attribute notation
 
@@ -116,21 +116,28 @@ class ConfigTemplate(Config):
         fn=None         : If given, will assign this filename to the rendered Config.
         prompt=False    : If True, will prompt for any param that is None.
         """
+        from getpass import getpass
+        expected_params = self.expects()
         if prompt==True:
-            for block in params.keys():
-                for key in params[block].keys():
-                    if params[block][key] is None:
-                        params[block][key] = input("%s.%s: " % (block, key))
+            for block in expected_params.keys():
+                if block not in params.keys():
+                    params[block] = Dict()
+                for key in expected_params[block].keys():
+                    if params[block].get(key) is None:
+                        if key=='password':
+                            params[block][key] = getpass("%s.%s: " % (block, key))
+                        else:
+                            params[block][key] = input("%s.%s: " % (block, key))
         config = Config(**self)
-        if fn is None: 
-            fn = self.__dict__.get('__filename__')
-        if fn is not None:
-            config.__dict__['__filename__'] = os.path.splitext(fn)[0]
+        if fn is None and self.__dict__.get('__filename__') is not None: 
+            fn = os.path.splitext(self.__dict__.get('__filename__'))[0]
+        config.__dict__['__filename__'] = fn
         for block in config.keys():
             for key in config[block].keys():
                 config[block][key] = config[block][key].format(**params)
         return config
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    if len(sys.argv) == 0 or sys.argv[0]=='test':
+        import doctest
+        doctest.testmod()
