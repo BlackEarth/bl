@@ -159,7 +159,7 @@ def configure_package(path, packages=[], template_name='config.ini.TEMPLATE',
                 if key not in config_template.keys():
                     config_template[key] = ct[key]
 
-    config_template.write(fn=os.path.join(path, template_name))
+    # config_template.write(fn=os.path.join(path, template_name))
 
     # render the config
     config = config_template.render(prompt=True, **config_params)
