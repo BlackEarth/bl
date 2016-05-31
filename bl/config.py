@@ -105,7 +105,7 @@ class ConfigTemplate(Config):
         regex = re.compile("(?<![\{\$])\{([^\{\}]+)\}")
         for block in self.keys():
             for key in self[block].keys():
-                for param in re.findall(regex, self[block][key]):
+                for param in re.findall(regex, str(self[block][key])):
                     b, k = param.split('.')
                     if b not in params: params[b] = Dict()
                     params[b][k] = None
