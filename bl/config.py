@@ -135,7 +135,8 @@ class ConfigTemplate(Config):
         config.__dict__['__filename__'] = fn
         for block in config.keys():
             for key in config[block].keys():
-                config[block][key] = config[block][key].format(**params)
+                if type(config[block][key])==str:
+                    config[block][key] = config[block][key].format(**params)
         return config
 
 def configure_package(path, packages=[], template_name='config.ini.TEMPLATE', 
@@ -158,8 +159,6 @@ def configure_package(path, packages=[], template_name='config.ini.TEMPLATE',
             for key in ct.keys():
                 if key not in config_template.keys():
                     config_template[key] = ct[key]
-
-    # config_template.write(fn=os.path.join(path, template_name))
 
     # render the config
     config = config_template.render(prompt=True, **config_params)
