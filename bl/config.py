@@ -128,7 +128,7 @@ class ConfigTemplate(Config):
                         if key=='password':
                             params[block][key] = getpass("%s.%s: " % (block, key))
                         else:
-                            params[block][key] = input("%s.%s: " % (block, key))
+                            params[block][key] = input("%s.%s: " % (block, key)).replace(r'\ ', ' ')
         config = Config(**self)
         if fn is None and self.__dict__.get('__filename__') is not None: 
             fn = os.path.splitext(self.__dict__.get('__filename__'))[0]
