@@ -1,7 +1,7 @@
 # zip.py - class for handling ZIP files
 
 from zipfile import ZipFile, ZIP_DEFLATED
-import os
+import os, sys
 from bl.dict import Dict
 from bl.log import Log
 
@@ -34,3 +34,8 @@ class ZIP(Dict):
                     zipf.write(walkfn, os.path.relpath(walkfn, path))
         zipf.close()
         return fn
+
+if __name__=='__main__':
+    for path in sys.argv[1:]:
+        print(ZIP.zip_path(path))
+
