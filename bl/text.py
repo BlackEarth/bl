@@ -21,6 +21,3 @@ class Text(File):
             data = (text or self.text or '').encode()
         File.write(self, fn=fn, data=data, **args)
         
-    def markdown(self):
-        from markdown import markdown as _markdown
-        return(_markdown(self.text))
