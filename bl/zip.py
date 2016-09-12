@@ -3,13 +3,12 @@
 from zipfile import ZipFile, ZIP_DEFLATED
 import os, sys
 from bl.dict import Dict
-from bl.log import Log
 
 class ZIP(Dict):
     """zipfile wrapper"""
 
-    def __init__(self, fn=None, mode='r', compression=ZIP_DEFLATED, log=Log(), **args):
-        Dict.__init__(self, fn=fn, mode=mode, compression=compression, log=log, **args)
+    def __init__(self, fn=None, mode='r', compression=ZIP_DEFLATED, **args):
+        Dict.__init__(self, fn=fn, mode=mode, compression=compression, **args)
         if fn is not None:
             self.zipfile = ZipFile(self.fn, mode=mode, compression=compression)
 
@@ -22,7 +21,7 @@ class ZIP(Dict):
         self.zipfile.close()
 
     @classmethod
-    def zip_path(CLASS, path, fn=None, mode='w', exclude=[], log=Log()):
+    def zip_path(CLASS, path, fn=None, mode='w', exclude=[]):
         if fn is None:
             fn = path+'.zip'
         zipf = CLASS(fn, mode=mode).zipfile
