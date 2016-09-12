@@ -1,5 +1,6 @@
 
 class Int(int):
+    """overloaded integer class with additional methods"""
 
     def roman(self):
         num = self
