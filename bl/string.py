@@ -152,7 +152,7 @@ class String(str):
     def rjust(self, width, *fillchar): return String(str.rjust(self, width, *fillchar))
     def rsplit(self, **kwargs): return String(str.rsplit(self, **kwargs))
     def rstrip(self, *chars): return String(str.rstrip(self, *chars))
-    def split(self, **kwargs): return [String(s) for s in str.split(self, **kwargs)]
+    def split(self, arg): return [String(s) for s in str.split(arg)]
     def splitlines(self, *keepends): return [String(l) for l in str.splitlines(self, *keepends)]
     def strip(self, *chars): return String(str.strip(self, *chars))
     def swapcase(self): return String(str.swapcase(self))
