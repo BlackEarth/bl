@@ -12,10 +12,19 @@ class ZIP(Dict):
         if fn is not None:
             self.zipfile = ZipFile(self.fn, mode=mode, compression=compression)
 
+    def write(self, fn=None):
+        """copy the zip file from its filename to the given filename."""
+        fn = fn or self.fn
+        if not os.path.exists(os.path.dirname(fn)):
+            os.makedirs(os.path.dirname(fn))
+        f = open(self.fn, 'rb'); b = f.read(); f.close()
+        f = open(fn, 'wb'); f.write(b); f.close()
+
     def unzip(self, path=None, members=None, pwd=None):
         if path is None: path = os.path.splitext(self.fn)[0]
         if not os.path.exists(path): os.makedirs(path)
         self.zipfile.extractall(path=path, members=members, pwd=pwd)
+        return path
 
     def close(self):
         self.zipfile.close()
@@ -35,6 +44,12 @@ class ZIP(Dict):
         return fn
 
 if __name__=='__main__':
-    for path in sys.argv[1:]:
-        print(ZIP.zip_path(path))
-
+    if sys.argv[1]=='unzip':
+        for fn in sys.argv[2:]:
+            print(ZIP(fn=fn).unzip())
+    elif sys.argv[1]=='zip':
+        for path in sys.argv[2:]:
+            print(ZIP.zip_path(path))
+    else:
+        for path in sys.argv[1:]:
+            print(ZIP.zip_path(path))
