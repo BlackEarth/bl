@@ -21,8 +21,8 @@ id.punct_chars has most ascii punctuation.
 id.ascii_chars = id.alphanum_chars + id.punct_chars.
 
 urlslug_chars adds to id.alphanum_chars certain punctuation that is allowed 
-in urls. 73 characters. This is useful for URL shorteners.
-    + 73^4 = 28.4 million unique URL slugs. 
+in urls. 72 characters. This is useful for URL shorteners.
+    + 72^4 = 26.9 million unique URL slugs. 
     + So a private URL shortener can be like the following:
         - www.tld.to/YpH0
     which exactly fits the size for micro-QR codes (15 characters).
@@ -52,7 +52,7 @@ punct_chars = ['~','!','@','#','$','%','^','&','*','(',')','_','-','+',
 
 ascii_chars = alphanum_chars + punct_chars
 
-urlslug_punct = ['$', '-', '_', '.', '+', '!', '*', "'", '(', ')', ',']
+urlslug_punct = ['-', '_', '.', '+', '!', '*', "'", '(', ')', ',']
 urlslug_chars = alphanum_chars + urlslug_punct
 
 def random_id(length=8, charset=id_chars, first_charset=lcase_chars, group_char='', group_length=0):
