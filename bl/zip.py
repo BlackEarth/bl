@@ -12,6 +12,10 @@ class ZIP(Dict):
         if fn is not None:
             self.zipfile = ZipFile(self.fn, mode=mode, compression=compression)
 
+    def read(self, src):
+        """return file data from within the docx file"""
+        return self.zipfile.read(src)
+
     def write(self, fn=None):
         """copy the zip file from its filename to the given filename."""
         fn = fn or self.fn
