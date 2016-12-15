@@ -1,6 +1,14 @@
 
 import os
-from glob import glob, escape
+from glob import glob
+try:
+    from glob import escape
+except:                                                 # support Python < 3.4
+    magic_check = re.compile('([*?[])')
+    def escape(s):
+        drive, pathname = os.path.splitdrive(s)
+        pathname = magic_check.sub(r'[\1]', pathname)
+        return drive + pathname
 
 def rglob(dirname, pattern, dirs=False, sort=True):
     """recursive glob, gets all files that match the pattern within the directory tree"""
