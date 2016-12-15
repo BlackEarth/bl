@@ -4,6 +4,7 @@ from glob import glob
 try:
     from glob import escape
 except:                                                 # support Python < 3.4
+    import re
     magic_check = re.compile('([*?[])')
     def escape(s):
         drive, pathname = os.path.splitdrive(s)

@@ -1,7 +1,7 @@
 
 config = {
   "name": "bl",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "Black Earth core library",
   "url": "https://github.com/BlackEarth/bl",
   "author": "Sean Harrison",
@@ -11,6 +11,7 @@ config = {
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    "Programming Language :: Python :: 2",
     "Programming Language :: Python :: 3"
   ],
   "entry_points": {},
