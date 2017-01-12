@@ -2,6 +2,9 @@
 import os, subprocess, time
 from bl.dict import Dict
 
+import logging
+log = logging.getLogger(__name__)
+
 class File(Dict):
     def __init__(self, fn=None, data=None, **args):
         if type(fn)==str: fn=fn.strip().replace('\\ ', ' ')
@@ -43,18 +46,15 @@ class File(Dict):
 
     def write(self, fn=None, data=None, mode='wb', 
                 max_tries=3):                   # sometimes there's a disk error on SSD, so try 3x
-        outfn = fn or self.fn
-        if not os.path.exists(os.path.dirname(outfn)):
-            os.makedirs(os.path.dirname(outfn))
-        def try_write(fd, tries=0):         
+        def try_write(fd, outfn, tries=0):         
             try:
-                if fd is None:
+                if fd is None and os.path.exists(self.fn):
                     if 'b' in mode:
                         fd=self.read(mode='rb')
                     else:
                         fd=self.read(mode='r')
                 f = open(outfn, mode)
-                f.write(fd)
+                f.write(fd or b'')
                 f.close()
             except: 
                 if tries < max_tries:
@@ -62,7 +62,11 @@ class File(Dict):
                     try_write(fd, tries=tries+1)
                 else:
                     raise
-        try_write(data or self.data, tries=0)
+        outfn = fn or self.fn
+        if not os.path.exists(os.path.dirname(outfn)):
+            log.info("creating directory: %s" % os.path.dirname(outfn))
+            os.makedirs(os.path.dirname(outfn))
+        try_write(data or self.data, outfn, tries=0)
 
     @classmethod
     def readable_size(C, size, suffix='B'):
