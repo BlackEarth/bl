@@ -1,11 +1,15 @@
 
+
+import logging
+log = logging.getLogger(__name__)
+
 import csv
 from bl.text import Text
 
 def load_csv(fn, encoding='UTF-8', delimiter='\t', headings=True):
     data = []
     t = Text(fn=fn, encoding=encoding)
-    lines = t.split("\n")
+    lines = t.text.split("\n")
     reader = csv.reader(lines, delimiter=delimiter)
     if headings==True:
         # the first row is the keys
