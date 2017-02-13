@@ -31,6 +31,7 @@ class Config(Dict):
     def __init__(self, fn=None, interpolation=None, 
                 split_list=None, join_list=None, **params):
         config = ConfigParser(interpolation=interpolation or self.Interpolation)
+        config.optionxform = lambda option: option      # don't lowercase key names
         self.__dict__['__filename__'] = fn
         self.__dict__['__join_list__'] = join_list
         if fn is not None:
