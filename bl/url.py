@@ -17,7 +17,7 @@ class URL(Dict):
     'http://blackearth.us:8888/this/is;really?not=something#important'
     >>> u
     URL('http://blackearth.us:8888/this/is;really?not=something#important')
-    >>> u.qstring()
+    >>> u.qstring
     'not=something'
     >>> u.drop_qarg('not')
     URL('http://blackearth.us:8888/this/is;really#important')
@@ -61,8 +61,34 @@ class URL(Dict):
         u.update(**args)
         return u
 
+    def __str__(self):
+        pr = (self.scheme, self.host, self.path,
+            self.params, self.qstring, self.fragment)
+        s = urllib.parse.urlunparse(pr)
+        if s[:2]=='//': s = s[2:]       # strip an empty protocol separator from beginning
+        return s
+
+    def __repr__(self):
+        return """URL('%s')""" % str(self)
+
+    @property
     def qstring(self):
         return urllib.parse.urlencode(self.qargs)
+
+    @property
+    def basename(self):
+        """return the basename of the URL's path"""
+        return self.path.split('/')[-1]
+
+    @property
+    def parent(self):
+        """return the parent URL, with params, query, and fragment in place"""
+        path = '/'.join(self.path.split('/')[:-1])
+        s = path.strip('/').split(':')
+        if len(s)==2 and s[1]=='':
+            return None
+        else:
+            return self.__class__(self, path=path)
 
     def no_qargs(self):
         u = URL(**self)
@@ -76,38 +102,15 @@ class URL(Dict):
                 del(u.qargs[k])
         return u
 
-    def __str__(self):
-        pr = (self.scheme, self.host, self.path,
-            self.params, self.qstring(), self.fragment)
-        s = urllib.parse.urlunparse(pr)
-        if s[:2]=='//': s = s[2:]       # strip an empty protocol separator from beginning
-        return s
-
     def quoted(self):
         pr = (self.scheme, self.host, urllib.parse.quote(self.path),
-            self.params, self.qstring(), self.fragment)
+            self.params, self.qstring, self.fragment)
         return urllib.parse.urlunparse(pr)        
 
     def unquoted(self):
         pr = (self.scheme, self.host, urllib.parse.unquote(self.path),
-            self.params, self.qstring(), self.fragment)
+            self.params, self.qstring, self.fragment)
         return urllib.parse.urlunparse(pr)                
-
-    def __repr__(self):
-        return """URL('%s')""" % str(self)
-
-    def basename(self):
-        """return the basename of the URL's path"""
-        return self.path.split('/')[-1]
-
-    def parent(self):
-        """return the parent URL, with params, query, and fragment in place"""
-        path = '/'.join(self.path.split('/')[:-1])
-        s = path.strip('/').split(':')
-        if len(s)==2 and s[1]=='':
-            return None
-        else:
-            return self.__class__(self, path=path)
 
     @classmethod
     def finditer(C, text):
