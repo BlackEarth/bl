@@ -1,5 +1,5 @@
 
-import os, subprocess, time
+import os, re, subprocess, time
 from bl.dict import Dict
 
 import logging
@@ -25,11 +25,24 @@ class File(Dict):
     def dirpath(self):
         return os.path.dirname(os.path.abspath(self.fn))
 
+    @property
+    def path(self):
+        return self.dirpath()
+
     def basename(self):
         return os.path.basename(self.fn)
 
+    def make_basename(self, fn=None, ext=None):
+        """make a filesystem-compliant basename for this file"""
+        fb, oldext = os.path.splitext(os.path.basename(fn or self.fn))
+        ext = ext or oldext.lower()
+        fb = re.sub("&[^;]*?;", ' ', fb)                          # remove entities
+        fb = re.sub("""['"\u2018\u2019\u201c\u201d]""", ' ', fb)  # remove quotes
+        fb = re.sub("\W+", '-', fb).strip(' -')                   # non-word to hyphen, collapse multiple
+        return ''.join([fb, ext])
+
     def ext(self):
-        return os.path.splitext(self.fn)[1]
+        return os.path.splitext(self.fn)[-1]
 
     def relpath(self, dirpath=None):
         return os.path.relpath(self.fn, dirpath or self.dirpath()).replace('\\','/')

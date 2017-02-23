@@ -34,7 +34,7 @@ class ZIP(Dict):
         self.zipfile.close()
 
     @classmethod
-    def zip_path(CLASS, path, fn=None, mode='w', exclude=[]):
+    def zip_path(CLASS, path, fn=None, exclude=[], mode='w'):
         if fn is None:
             fn = path+'.zip'
         zipf = CLASS(fn, mode=mode).zipfile
