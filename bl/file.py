@@ -72,12 +72,12 @@ class File(Dict):
             except: 
                 if tries < max_tries:
                     time.sleep(.1)              # I found 0.1 s gives the disk time to recover. YMMV
-                    try_write(fd, tries=tries+1)
+                    try_write(fd, outfn, tries=tries+1)
                 else:
                     raise
         outfn = fn or self.fn
         if not os.path.exists(os.path.dirname(outfn)):
-            log.info("creating directory: %s" % os.path.dirname(outfn))
+            log.debug("creating directory: %s" % os.path.dirname(outfn))
             os.makedirs(os.path.dirname(outfn))
         try_write(data or self.data, outfn, tries=0)
 
