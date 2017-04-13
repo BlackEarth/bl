@@ -90,6 +90,9 @@ class URL(Dict):
         else:
             return self.__class__(self, path=path)
 
+    def split(self):
+        return str(self).split('/')
+
     def no_qargs(self):
         u = URL(**self)
         u.qargs = Dict()
