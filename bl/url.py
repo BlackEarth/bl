@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import re, urllib.parse
+import os, re, urllib.parse
 from bl.dict import Dict
 
 # pattern from https://gist.github.com/gruber/249502#gistcomment-1328838
@@ -78,7 +78,7 @@ class URL(Dict):
     @property
     def basename(self):
         """return the basename of the URL's path"""
-        return self.path.split('/')[-1]
+        return os.path.basename(self.path)
 
     @property
     def parent(self):
@@ -94,7 +94,7 @@ class URL(Dict):
         return str(self).split('/')
 
     def splitext(self):
-        return str(self).splitext()
+        return os.path.splitext(str(self))
 
     def no_qargs(self):
         u = URL(**self)
