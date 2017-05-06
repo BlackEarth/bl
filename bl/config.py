@@ -42,7 +42,7 @@ class Config(Dict):
         self.update(**params)
 
     def __repr__(self):
-        return "Config('%s')" % self.__filename__
+        return "%s(%r)" % (self.__class__.__name__, self.__filename__)
 
     def parse_config(self, config, split_list=None):
         for s in config.sections():
