@@ -8,7 +8,9 @@ DICT_ELEM = """(\s*['"].+['"]\s*:\s*[^,]+)"""
 DICT_PATTERN = """^\{\s*(%s,\s*%s*)?,?\s*\}$""" % (DICT_ELEM, DICT_ELEM)
 
 class Config(Dict):
-    """class for holding application configuration in an Ini file. Sample Usage:
+    """class for holding application configuration in an Ini file. 
+
+    Sample Usage:
     
     >>> cf_filename = os.path.join(os.path.dirname(__file__), "config_test.ini")
     >>> cf = Config(cf_filename)
@@ -68,6 +70,7 @@ class Config(Dict):
 
     def write(self, fn=None, sorted=False, wait=0):
         """write the contents of this config to fn or its __filename__.
+
         NOTE: All interpolations will be expanded in the written file.
         """
         config = ConfigParser(interpolation=None)
@@ -144,8 +147,9 @@ class ConfigTemplate(Config):
 def configure_package(path, packages=[], template_name='config.ini.TEMPLATE', 
         config_name='config.ini', **config_params):
     """configure the package at the given path with a config template and file.
-    packages        = a list of packages to search for config templates
-    config_params   = a dict containing config param blocks.
+
+        packages        = a list of packages to search for config templates
+        config_params   = a dict containing config param blocks.
     """
     import importlib
 

@@ -10,6 +10,7 @@ REGEXP = re.compile(PATTERN, re.I+re.U)
 class URL(Dict):
     """URL object class. Makes handling URLs very easy. Holds the URL in parsed, unquoted form internally.
     Sample usage:
+
     >>> u = URL('http://blackearth.us:8888/this/is;really?not=something#important')
     >>> u.scheme, u.host, u.path, u.params, u.qargs, u.fragment
     ('http', 'blackearth.us:8888', '/this/is', 'really', {'not': 'something'}, 'important')

@@ -1,4 +1,3 @@
-
 """
 The String() class provided in this library allows a more object-oriented usage pattern and adds 
 several convenience methods that are not available in the standard library. String() inherits from 
