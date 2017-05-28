@@ -2,24 +2,27 @@
 
 class Dict(dict):
     """A dict class that:
-        * allows dot-notation attribute access, returning None if key not found
-        * sorts keys on calls to keys() and items() and repr(), making many things easier
-        * therefore requires that all keys need to be a sortable collection -- 
-            for example only use string keys.
-        * allows calling itself with parameters, which creates a new Dict based on 
-            this one without modifying it. (immutability)
+
+    * allows dot-notation attribute access, returning None if key not found
+    * sorts keys on calls to keys() and items() and repr(), making many things easier
+    * therefore requires that all keys need to be a sortable collection -- 
+        for example only use string keys.
+    * allows calling itself with parameters, which creates a new Dict based on 
+        this one without modifying it. (immutability)
+
     Usage:
-    >>> d = Dict(c=3, b=2, a=1)                     # initialize with parameters or **{...}
-    >>> d.a                                         # dot-access notation
-    1
-    >>> d                                           # ordered keys
-    {'a': 1, 'b': 2, 'c': 3}
-    >>> d.update(d=4); d                            # Dict.update() modifies Dict in place
-    {'a': 1, 'b': 2, 'c': 3, 'd': 4}
-    >>> d(e=5)                                      # new Dict is a copy, doesn't modify existing
-    {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
-    >>> d                                           # no changes
-    {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+    
+        >>> d = Dict(c=3, b=2, a=1)                     # initialize with parameters or **{...}
+        >>> d.a                                         # dot-access notation
+        1
+        >>> d                                           # ordered keys
+        {'a': 1, 'b': 2, 'c': 3}
+        >>> d.update(d=4); d                            # Dict.update() modifies Dict in place
+        {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+        >>> d(e=5)                                      # new Dict is a copy, doesn't modify existing
+        {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
+        >>> d                                           # no changes
+        {'a': 1, 'b': 2, 'c': 3, 'd': 4}
     """
 
     def __init__(xCqNck7t, **kwargs):

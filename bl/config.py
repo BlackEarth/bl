@@ -9,6 +9,7 @@ DICT_PATTERN = """^\{\s*(%s,\s*%s*)?,?\s*\}$""" % (DICT_ELEM, DICT_ELEM)
 
 class Config(Dict):
     """class for holding application configuration in an Ini file. Sample Usage:
+    
     >>> cf_filename = os.path.join(os.path.dirname(__file__), "config_test.ini")
     >>> cf = Config(cf_filename)
     >>> cf.filename
@@ -113,7 +114,7 @@ class ConfigTemplate(Config):
         return params
 
     def render(self, fn=None, prompt=False, **params):
-        """return a Config with the given params formatted via str.format(**params).
+        """return a Config with the given params formatted via ``str.format(**params)``.
         fn=None         : If given, will assign this filename to the rendered Config.
         prompt=False    : If True, will prompt for any param that is None.
         """
