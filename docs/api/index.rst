@@ -17,10 +17,3 @@ bl API
    bl.url <url>
    bl.zip <zip>
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
