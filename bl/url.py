@@ -72,6 +72,10 @@ class URL(Dict):
     def __repr__(self):
         return """URL('%s')""" % str(self)
 
+    def __contains__(self, key):
+        """enable the 'in' operator by casting both terms to str."""
+        return str(key) in str(self)
+
     @property
     def qstring(self):
         return urllib.parse.urlencode(self.qargs)
