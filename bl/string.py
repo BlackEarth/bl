@@ -70,9 +70,9 @@ class String(str):
         outstring = "".join(l)
         return String(outstring)
 
-    def identifier(self, camelsplit=False):
+    def identifier(self, camelsplit=False, ascii=True):
         """return a python identifier from the string"""
-        outstring = self.nameify(camelsplit=camelsplit).replace('-', '_')
+        outstring = self.nameify(camelsplit=camelsplit, ascii=ascii).replace('-', '_')
         if len(outstring)==0 or re.match("[^A-Za-z]", outstring[0]):
             outstring = "_" + outstring
         return String(outstring)
@@ -81,19 +81,22 @@ class String(str):
         """lowercase, hyphen-separated string, useful for XML tags."""
         return self.nameify().lower()
 
-    def nameify(self, camelsplit=False):
+    def nameify(self, camelsplit=False, ascii=True):
         if camelsplit==True: 
             s = self.camelsplit()
         else:
             s = self
-        return s.hyphenify()
+        return s.hyphenify(ascii=ascii)
 
-    def hyphenify(self):
+    def hyphenify(self, ascii=False):
         """Turn non-word characters (incl. underscore) into single hyphens"""
         outstring = str(self)
         outstring = re.sub("&[^;]*?;", ' ', outstring)                          # entities
         outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
-        outstring = re.sub("\W+", '-', outstring).strip(' -')                   # collapse multiple
+        if ascii==True
+            outstring = re.sub("\W+", '-', outstring, flags=re.A).strip(' -')   # ASCII-only
+        else:
+            outstring = re.sub("\W+", '-', outstring).strip(' -')               # Unicode allowed
         return String(outstring)
 
     def camelsplit(self):
