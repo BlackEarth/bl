@@ -93,7 +93,7 @@ class String(str):
         outstring = str(self)
         outstring = re.sub("&[^;]*?;", ' ', outstring)                          # entities
         outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
-        if ascii==True
+        if ascii==True:
             outstring = re.sub("\W+", '-', outstring, flags=re.A).strip(' -')   # ASCII-only
         else:
             outstring = re.sub("\W+", '-', outstring).strip(' -')               # Unicode allowed
