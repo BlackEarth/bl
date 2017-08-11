@@ -1,6 +1,7 @@
 
 import os, re, subprocess, time
 from bl.dict import Dict
+from bl.string import String
 
 import logging
 log = logging.getLogger(__name__)
@@ -29,6 +30,10 @@ class File(Dict):
     def path(self):
         return self.dirpath()
 
+    def clean_filename(self, fn=None):
+        fn = fn or self.fn or ''
+        return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn))
+
     def basename(self):
         return os.path.basename(self.fn)
 
@@ -36,9 +41,7 @@ class File(Dict):
         """make a filesystem-compliant basename for this file"""
         fb, oldext = os.path.splitext(os.path.basename(fn or self.fn))
         ext = ext or oldext.lower()
-        fb = re.sub("&[^;]*?;", ' ', fb)                          # remove entities
-        fb = re.sub("""['"\u2018\u2019\u201c\u201d]""", ' ', fb)  # remove quotes
-        fb = re.sub("\W+", '-', fb).strip(' -')                   # non-word to hyphen, collapse multiple
+        fb = String(fb).hyphenify(ascii=True)
         return ''.join([fb, ext])
 
     def ext(self):
