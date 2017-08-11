@@ -13,7 +13,7 @@ String(), which enables chaining. For example:
 'In the beginning God created'
 """
 
-import re
+import re, urllib.parse
 
 # articles, conjunctions, prepositions, the s in 's
 LOWERCASE_WORDS = {
@@ -89,14 +89,17 @@ class String(str):
         return s.hyphenify(ascii=ascii)
 
     def hyphenify(self, ascii=False):
-        """Turn non-word characters (incl. underscore) into single hyphens"""
+        """Turn non-word characters (incl. underscore) into single hyphens.
+        If ascii=True, return ASCII-only.
+        If also lossless=True, use the UTF-8 codes for the non-ASCII characters.
+        """
         outstring = str(self)
-        outstring = re.sub("&[^;]*?;", ' ', outstring)                          # entities
         outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
         if ascii==True:                                                         # ASCII-only
-            outstring = re.sub("\W+", '-', outstring, flags=re.A).strip(' -')
-        else:
-            outstring = re.sub("\W+", '-', outstring).strip(' -')               # Unicode allowed
+            outstring = outstring.encode('ascii', 'xmlcharrefreplace').decode('ascii') # use entities
+        outstring = re.sub("&?([^;]*?);", r'.\1-', outstring)                   # entities
+        outstring = outstring.replace('#', 'u')
+        outstring = re.sub("\W+", '-', outstring).strip(' -')
         return String(outstring)
 
     def camelsplit(self):
