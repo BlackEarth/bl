@@ -84,13 +84,24 @@ class File(Dict):
             os.makedirs(os.path.dirname(outfn))
         try_write(data or self.data, outfn, tries=0)
 
-    @classmethod
-    def readable_size(C, size, suffix='B'):
-        if size is None: return
-        size = float(size)
-        for unit in ['','K','M','G','T','P','E','Z']:
-            if abs(size) < 1024.0:
-                return "%3.1f %s%s" % (size, unit, suffix)
-            size /= 1024.0
-        return "%.1f %s%s" % (size, 'Y', suffix)
+    SIZE_UNITS = ['','K','M','G','T','P','E','Z','Y']
 
+    @classmethod
+    def readable_size(C, bytes, suffix='B', decimals=1):
+        """given a number of bytes, return the file size in readable units"""
+        if bytes is None: return
+        bytes = float(bytes)
+        for unit in C.SIZE_UNITS:
+            if abs(bytes) < 1024 or unit == C.SIZE_UNITS[-1]:
+                return "{bytes:.{decimals}f} {unit}{suffix}".format(bytes=bytes, unit=unit, suffix=suffix, decimals=decimals)
+            bytes /= 1024
+
+    @classmethod
+    def bytes_from_readable_size(C, size, suffix='B'):
+        """given a readable_size (as produced by File.readable_size()), return the number of bytes."""
+        s = re.split("^([0-9\.]+)\s*([%s])%s?" % (''.join(C.SIZE_UNITS), suffix), size, flags=re.I)
+        bytes, unit = round(float(s[1])), s[2].upper()
+        while unit in C.SIZE_UNITS and C.SIZE_UNITS.index(unit) > 0:
+            bytes *= 1024
+            unit = C.SIZE_UNITS[C.SIZE_UNITS.index(unit)-1]
+        return bytes
