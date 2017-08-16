@@ -31,7 +31,11 @@ class File(Dict):
 
     @property
     def size(self):
-        return os.stat(self.fn).st_size
+        if self.isdir:
+            s = subprocess.check_output(['du', '-sh', self.fn]).decode('utf-8').split('\t')[0].strip()
+            return self.bytes_from_readable_size(s)
+        elif self.isfile:
+            return os.stat(self.fn).st_size
 
     @property
     def isdir(self):
@@ -45,16 +49,16 @@ class File(Dict):
     def exists(self):
         return os.path.exists(self.fn)
 
-    def file_list(self, sort=True, key=None):
+    def file_list(self, depth=None):
         fl = []
-        if self.isdir():
+        if self.isdir:
             for folder in os.walk(self.fn):
                 if folder[0] != self.fn:
                     fl.append(File(fn=folder[0]))    # add the folder itself
                 for fb in folder[2]:
                     fl.append(File(fn=os.path.join(folder[0], fb)))
-        if sort==True:
-            fl = sorted(fl, key=key)
+        if depth is not None:
+            fl = [fi for fi in fl if len(os.path.relpath(fi.fn, self.fn).split(os.path.sep)) <= depth]
         return fl
 
     @property
@@ -118,24 +122,27 @@ class File(Dict):
             os.makedirs(os.path.dirname(outfn))
         try_write(data or self.data, outfn, tries=0)
 
-    SIZE_UNITS = ['K','M','G','T','P','E','Z','Y']
+    SIZE_UNITS = ['', 'K','M','G','T','P','E','Z','Y']
 
     @classmethod
     def readable_size(C, bytes, suffix='B', decimals=1):
         """given a number of bytes, return the file size in readable units"""
         if bytes is None: return
-        size = float(bytes) / 1024
+        size = float(bytes)
         for unit in C.SIZE_UNITS:
             if abs(size) < 1024 or unit == C.SIZE_UNITS[-1]:
-                return "{size:.{decimals}f} {unit}{suffix}".format(size=size, unit=unit, suffix=suffix, decimals=decimals)
+                return "{size:.{decimals}f}\u00a0{unit}{suffix}".format(
+                    size=size, unit=unit, suffix=suffix, 
+                    decimals=C.SIZE_UNITS.index(unit) > 0 and decimals or 0       # B with no decimal
+                )
             size /= 1024
 
     @classmethod
     def bytes_from_readable_size(C, size, suffix='B'):
         """given a readable_size (as produced by File.readable_size()), return the number of bytes."""
-        s = re.split("^([0-9\.]+)\s*([%s])%s?" % (''.join(C.SIZE_UNITS), suffix), size, flags=re.I)
+        s = re.split("^([0-9\.]+)\s*([%s]?)%s?" % (''.join(C.SIZE_UNITS), suffix), size, flags=re.I)
         bytes, unit = round(float(s[1])), s[2].upper()
         while unit in C.SIZE_UNITS and C.SIZE_UNITS.index(unit) > 0:
             bytes *= 1024
             unit = C.SIZE_UNITS[C.SIZE_UNITS.index(unit)-1]
-        return bytes * 1024
+        return bytes
