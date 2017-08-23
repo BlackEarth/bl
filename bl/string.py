@@ -95,7 +95,7 @@ class String(str):
         """
         outstring = str(self)
         outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
-        outstring = re.sub(r'\s+', '-', outstring)                              # whitespace
+        outstring = re.sub(r'(?:\s|%20)+', '-', outstring)                      # whitespace
         if ascii==True:                                                         # ASCII-only
             outstring = outstring.encode('ascii', 'xmlcharrefreplace').decode('ascii') # use entities
         outstring = re.sub("&?([^;]*?);", r'.\1-', outstring)                   # entities
