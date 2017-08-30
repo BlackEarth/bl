@@ -65,12 +65,17 @@ class File(Dict):
     def path(self):
         return self.dirpath()
 
+    @property
+    def basename(self):
+        return os.path.basename(self.fn)
+
+    @property
+    def ext(self):
+        return os.path.splitext(self.fn)[-1]
+
     def clean_filename(self, fn=None):
         fn = fn or self.fn or ''
         return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn))
-
-    def basename(self):
-        return os.path.basename(self.fn)
 
     def make_basename(self, fn=None, ext=None):
         """make a filesystem-compliant basename for this file"""
@@ -79,8 +84,8 @@ class File(Dict):
         fb = String(fb).hyphenify(ascii=True)
         return ''.join([fb, ext])
 
-    def ext(self):
-        return os.path.splitext(self.fn)[-1]
+    def splitext(self, fn=None):
+        return os.path.splitext(fn or self.fn)
 
     def relpath(self, dirpath=None):
         return os.path.relpath(self.fn, dirpath or self.dirpath()).replace('\\','/')
