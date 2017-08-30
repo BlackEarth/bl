@@ -71,7 +71,7 @@ class File(Dict):
 
     @property
     def ext(self):
-        return os.path.splitext(self.fn)[-1]
+        return self.splitext()[-1]
 
     def clean_filename(self, fn=None):
         fn = fn or self.fn or ''
