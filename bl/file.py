@@ -1,5 +1,5 @@
 
-import os, re, subprocess, time
+import os, re, subprocess, time, datetime
 from bl.dict import Dict
 from bl.string import String
 
@@ -73,6 +73,10 @@ class File(Dict):
     def ext(self):
         return self.splitext()[-1]
 
+    @property
+    def name(self):
+        return self.splitext(fn=self.basename)[0]
+
     def clean_filename(self, fn=None):
         fn = fn or self.fn or ''
         return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn))
@@ -92,6 +96,10 @@ class File(Dict):
 
     def stat(self):
         return os.stat(self.fn)
+
+    @property
+    def last_modified(self):
+        return datetime.datetime.fromtimestamp(self.stat().st_mtime)
 
     def mimetype(self):
         from mimetypes import guess_type
