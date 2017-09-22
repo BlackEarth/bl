@@ -60,8 +60,8 @@ class String(str):
 
     def titleify(self, lc_words=LOWERCASE_WORDS['en'], allwords=False, lastword=True):
         """takes a string and makes a title from it"""
-        outstring = str(self)
-        l = re.split("([_\W]+)", outstring.strip())
+        s = str(self)
+        l = re.split("([_\W]+)", s.strip())
         for i in range(len(l)):
             l[i] = l[i].lower()
             if allwords==True or i == 0 \
@@ -73,54 +73,54 @@ class String(str):
                 else:
                     w = w.upper()
                 l[i] = w
-        outstring = "".join(l)
-        return String(outstring)
+        s = "".join(l)
+        return String(s)
 
-    def identifier(self, camelsplit=False, ascii=False):
-        """return a python identifier from the string"""
-        outstring = self.nameify(camelsplit=camelsplit, ascii=ascii).replace('-', '_')
-        if len(outstring)==0 or re.match("[^A-Za-z]", outstring[0]):
-            outstring = "_" + outstring
-        return String(outstring)
+    def identifier(self, camelsplit=False, ascii=True):
+        """return a python identifier from the string (underscore separators)"""
+        return self.nameify(camelsplit=camelsplit, ascii=ascii, sep='_')
 
     def tagify(self):
         """lowercase, hyphen-separated string, useful for XML tags."""
         return self.nameify().lower()
 
-    def nameify(self, camelsplit=False, ascii=False):
+    def nameify(self, camelsplit=False, ascii=True, sep='-'):
+        """return an XML name (hyphen-separated by default, initial underscore if non-letter)"""
+        s = String(str(self))   # immutable
         if camelsplit==True: 
-            s = self.camelsplit()
-        else:
-            s = self
-        return s.hyphenify(ascii=ascii)
+            s = s.camelsplit()
+        s = s.hyphenify(ascii=ascii).replace('-', sep)
+        if len(s)==0 or re.match("[^A-Za-z]", s[0]):
+            s = "_" + s
+        return String(s)
 
     def hyphenify(self, ascii=False):
         """Turn non-word characters (incl. underscore) into single hyphens.
         If ascii=True, return ASCII-only.
         If also lossless=True, use the UTF-8 codes for the non-ASCII characters.
         """
-        outstring = str(self)
-        outstring = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', outstring)   # quotes
-        outstring = re.sub(r'(?:\s|%20)+', '-', outstring)                      # whitespace
+        s = str(self)
+        s = re.sub("""['"\u2018\u2019\u201c\u201d]""", '', s)   # quotes
+        s = re.sub(r'(?:\s|%20)+', '-', s)                      # whitespace
         if ascii==True:                                                         # ASCII-only
-            outstring = outstring.encode('ascii', 'xmlcharrefreplace').decode('ascii') # use entities
-        outstring = re.sub("&?([^;]*?);", r'.\1-', outstring)                   # entities
-        outstring = outstring.replace('#', 'u')
-        outstring = re.sub("\W+", '-', outstring).strip(' -')
-        return String(outstring)
+            s = s.encode('ascii', 'xmlcharrefreplace').decode('ascii') # use entities
+        s = re.sub("&?([^;]*?);", r'.\1-', s)                   # entities
+        s = s.replace('#', 'u')
+        s = re.sub("\W+", '-', s).strip(' -')
+        return String(s)
 
     def camelsplit(self):
         """Turn a CamelCase string into a string with spaces"""
-        outstring = str(self)
-        for i in range(len(outstring)-1, -1, -1):
+        s = str(self)
+        for i in range(len(s)-1, -1, -1):
             if i != 0 \
-            and ((outstring[i].isupper() 
-                    and outstring[i-1].isalnum() 
-                    and not outstring[i-1].isupper()) 
-                or (outstring[i].isnumeric() 
-                    and outstring[i-1].isalpha())):
-                outstring = outstring[:i] + ' ' + outstring[i:]
-        return String(outstring.strip())
+            and ((s[i].isupper() 
+                    and s[i-1].isalnum() 
+                    and not s[i-1].isupper()) 
+                or (s[i].isnumeric() 
+                    and s[i-1].isalpha())):
+                s = s[:i] + ' ' + s[i:]
+        return String(s.strip())
 
     def words(self):
         l = [String(w) for w in re.split(r"\s+", str(self))]
