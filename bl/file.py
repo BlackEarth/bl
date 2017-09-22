@@ -77,9 +77,9 @@ class File(Dict):
     def name(self):
         return self.splitext(fn=self.basename)[0]
 
-    def clean_filename(self, fn=None):
+    def clean_filename(self, fn=None, ext=None):
         fn = fn or self.fn or ''
-        return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn))
+        return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext))
 
     def make_basename(self, fn=None, ext=None):
         """make a filesystem-compliant basename for this file"""
