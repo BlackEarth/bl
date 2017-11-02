@@ -90,9 +90,9 @@ class Dict(dict):
         ks = self.keys(key=key, reverse=reverse)
         return [self[k] for k in ks]
 
-    def json(self, indent=None):
+    def json(self, **params):
         import json as _json
-        return _json.dumps(self, indent=indent)
+        return _json.dumps(self, **params)
   
 class StringDict(Dict):
     """Returns "" when a key does not exist. This is useful in web apps and 
