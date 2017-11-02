@@ -135,6 +135,10 @@ class File(Dict):
             os.makedirs(os.path.dirname(outfn))
         try_write(data or self.data, outfn, tries=0)
 
+    def delete(self):
+        """delete the file from the filesystem."""
+        os.remove(self.fn)
+
     SIZE_UNITS = ['', 'K','M','G','T','P','E','Z','Y']
 
     @classmethod
