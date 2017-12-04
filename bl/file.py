@@ -79,7 +79,10 @@ class File(Dict):
 
     def clean_filename(self, fn=None, ext=None):
         fn = fn or self.fn or ''
-        return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext))
+        if fn not in [None, '']:
+            return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext))
+        else:
+            return fn
 
     def make_basename(self, fn=None, ext=None):
         """make a filesystem-compliant basename for this file"""
