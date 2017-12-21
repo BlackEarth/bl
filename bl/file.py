@@ -1,5 +1,5 @@
 
-import os, re, subprocess, time, datetime
+import os, re, subprocess, sys, time, traceback, datetime
 from bl.dict import Dict
 from bl.string import String
 
@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class File(Dict):
     def __init__(self, fn=None, data=None, **args):
-        if type(fn)==str: fn=fn.strip().replace('\\ ', ' ')
+        if type(fn)==str: fn=fn.strip().replace('\\','/')
         Dict.__init__(self, fn=fn, data=data, **args)
 
     def __repr__(self):
@@ -27,7 +27,7 @@ class File(Dict):
         return data
 
     def dirpath(self):
-        return os.path.dirname(os.path.abspath(self.fn))
+        return os.path.dirname(os.path.abspath(self.fn)).replace('\\','/')
 
     @property
     def size(self):
@@ -80,9 +80,9 @@ class File(Dict):
     def clean_filename(self, fn=None, ext=None):
         fn = fn or self.fn or ''
         if fn not in [None, '']:
-            return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext))
+            return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext)).replace('\\','/')
         else:
-            return fn
+            return fn.replace('\\','/')
 
     def make_basename(self, fn=None, ext=None):
         """make a filesystem-compliant basename for this file"""
@@ -126,8 +126,11 @@ class File(Dict):
                 f = open(outfn, mode)
                 f.write(fd or b'')
                 f.close()
+                log.debug('wrote %s' % outfn)
             except: 
+                log.warn(sys.exc_info()[1])
                 if tries < max_tries:
+                    log.debug(traceback.format_exc())
                     time.sleep(.1)              # I found 0.1 s gives the disk time to recover. YMMV
                     try_write(fd, outfn, tries=tries+1)
                 else:
