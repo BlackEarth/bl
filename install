@@ -21,7 +21,7 @@ ln -s $VENV/bin/activate $SYMLINK
 # install this package and its dependencies in the virtual environment
 echo "installing requirements from $PACKAGE_PATH/requirements.txt"
 $PYTHON -m pip install --upgrade pip || echo ""
-$PYTHON -m pip install -r $PACKAGE_PATH/requirements.txt || echo ""
+# $PYTHON -m pip install -r $PACKAGE_PATH/requirements.txt || echo ""
 
 echo "installing $PACKAGE_PATH as editable"
 $PYTHON -m pip install -e "$PACKAGE_PATH" || exit 1

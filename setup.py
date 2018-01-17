@@ -1,7 +1,7 @@
 
 config = {
   "name": "bl",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Black Earth core library",
   "url": "https://github.com/BlackEarth/bl",
   "author": "Sean Harrison",
@@ -21,7 +21,7 @@ config = {
     "test": []
   },
   "package_data": {
-    "": ["*.jar", "*.sql", "*.xml", "*.xsl", "*.md", "*.TEMPLATE"]
+    "bl": []
   },
   "data_files": [],
   "scripts": []
