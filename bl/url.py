@@ -56,6 +56,9 @@ class URL(Dict):
             else:
                 self.qargs[k] = qargs[k]
 
+        # 4. normalize the path
+        self.path = self.path.replace('\\','/')     # backslash sometimes comes in from Windows.
+
     def __call__(self, **args):
         """return a new url with the given modifications (immutable design)."""
         u = URL(str(self))
