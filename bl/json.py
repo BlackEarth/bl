@@ -6,7 +6,7 @@ class JSON(File):
 	
 	def __init__(self, fn=None, data=None):
 		super().__init__(fn=fn, data=data)
-		if self.data is None and os.path.exists(self.fn):
+		if self.data is None and self.fn is not None and os.path.exists(self.fn):
 			self.data = self.read()
 		if self.data is not None:
 			self.data = json.loads(self.data)
