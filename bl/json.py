@@ -4,8 +4,8 @@ from bl.file import File
 
 class JSON(File):
 	
-	def __init__(self, fn=None, data=None):
-		super().__init__(fn=fn, data=data)
+	def __init__(self, fn=None, data=None, **params):
+		super().__init__(fn=fn, data=data, **params)
 		if self.data is None and self.fn is not None and os.path.exists(self.fn):
 			self.data = self.read()
 		if self.data is not None:
