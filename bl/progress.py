@@ -1,5 +1,5 @@
 
-import inspect, os
+import inspect, os, sys, traceback
 from time import time
 from bl.dict import Dict
 from bl.json import JSON
@@ -18,7 +18,8 @@ class Progress(JSON):
 		"""initialize process timing for the current stack"""
 		self.params.update(**params)
 		key = key or self.stack_key
-		self.current_times[key] = time()
+		if key is not None:
+			self.current_times[key] = time()
 
 	def runtime(self, key):
 		if self.data.get(key) is not None:
@@ -34,6 +35,7 @@ class Progress(JSON):
 		"""
 		r = Dict()
 		local_key = self.stack_key
+		if local_key is None: return {}
 		runtimes = self.runtimes()
 		for key in self.stack_keys:
 			if self.current_times.get(key) is None: 
@@ -49,23 +51,30 @@ class Progress(JSON):
 		"""record the current stack process as finished"""
 		self.report(fraction=1.0)
 		key = self.stack_key
-		if self.data.get(key) is None:
-			self.data[key] = []
-		start_time = self.current_times.get(key) or time()
-		self.data[key].append(Dict(runtime=time()-start_time, **self.params))
+		if key is not None:
+			if self.data.get(key) is None:
+				self.data[key] = []
+			start_time = self.current_times.get(key) or time()
+			self.data[key].append(Dict(runtime=time()-start_time, **self.params))
 
 	@property
 	def stack_keys(self):
-		l = self.stack_key.split(',')
+		key = self.stack_key
+		if key is not None:
+			l = self.stack_key.split(',')
+		else:
+			l = []
 		return [','.join(l[:i]) for i in range(1, len(l)+1)]
 
 	@property
 	def stack_key(self):
-		return ','.join(list(reversed([
-			t.filename+':'+t.function for t in 
-			[inspect.getframeinfo(i.frame) for i in inspect.stack()]
-			if os.path.abspath(t.filename) != os.path.abspath(__file__)	# omit locations in this file
-			and t.function != '<module>'
-			and 'runpy.py' not in t.filename
-		])))
-
+		try:
+			return ','.join(list(reversed([
+				t.filename+':'+t.function for t in 
+				[inspect.getframeinfo(i.frame) for i in inspect.stack()]
+				if os.path.abspath(t.filename) != os.path.abspath(__file__)	# omit locations in this file
+				and t.function != '<module>'
+				and 'runpy.py' not in t.filename
+			])))
+		except:
+			log.error(traceback.format_exc())
