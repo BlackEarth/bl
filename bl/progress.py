@@ -1,8 +1,10 @@
 
-import inspect, os, sys, traceback
+import inspect, logging, os, sys, traceback
 from time import time
 from bl.dict import Dict
 from bl.json import JSON
+
+log = logging.getLogger(__name__)
 
 class Progress(JSON):
 	"""tabulate progress statistics for given processes, and report the progress of those processes"""
