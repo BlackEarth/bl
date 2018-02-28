@@ -7,12 +7,12 @@ from bl.json import JSON
 class Progress(JSON):
 	"""tabulate progress statistics for given processes, and report the progress of those processes"""
 	
-	def __init__(self, fn=None, data=None, **params):
+	def __init__(self, fn=None, data=None, key=None, **params):
 		# JSON.__init__() loads the stored progress data from the given .json file
 		super().__init__(fn=fn, data=data, params=params)
 		if self.data is None: self.data = Dict()
 		self.current_times = Dict()					# start times for current stack processes.
-		self.init_key = self.stack_key
+		self.init_key = key or self.stack_key
 
 	def start(self, key=None, **params):
 		"""initialize process timing for the current stack"""
@@ -21,7 +21,8 @@ class Progress(JSON):
 		if key is not None:
 			self.current_times[key] = time()
 
-	def runtime(self, key):
+	def runtime(self, key=None):
+		key = key or self.init_key
 		if self.data.get(key) is not None:
 			return sum([v['runtime'] for v in self.data[key]]) / len(self.data[key])
 
