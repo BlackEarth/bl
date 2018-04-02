@@ -30,11 +30,9 @@ class URL(Dict):
                 fragment=None, query=None, qargs={}):
         """create a URL object from the given url string."""
 
-        # 1. parse the url string with urlparse
-        if type(url) == URL:
-            pr = urllib.parse.urlparse(str(url))
-        else:
-            pr = urllib.parse.urlparse(url)
+        # 1. parse the url string
+        # s = str(url).replace('file://', 'file:')    # needed for file URLs to parse correctly
+        pr = urllib.parse.urlparse(url)
 
         # 2. deal with parameters
         self.scheme     = scheme or pr.scheme
@@ -58,6 +56,12 @@ class URL(Dict):
 
         # 4. normalize the path
         self.path = self.path.replace('\\','/')     # backslash sometimes comes in from Windows.
+        if path != '/':
+            self.path = self.path.rstrip('/')
+
+        # 5. deal with file: URL anomalies in urllib
+        if self.scheme == 'file' and self.host != '':
+            self.path, self.host = self.join(self.host, self.path).path, ''
 
     def __call__(self, **args):
         """return a new url with the given modifications (immutable design)."""
@@ -135,10 +139,7 @@ class URL(Dict):
     def join(C, *args, **kwargs):
         """join a list of url elements, and include any keyword arguments, as a new URL"""
         u = C('/'.join([str(arg).strip('/') for arg in args]), **kwargs)
-        if u.scheme in [None, '']:
-            u.path = '/' + u.path
         return u
-
 
 if __name__=='__main__':
     import doctest
