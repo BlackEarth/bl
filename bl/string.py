@@ -90,7 +90,7 @@ class String(str):
         if camelsplit==True: 
             s = s.camelsplit()
         s = s.hyphenify(ascii=ascii).replace('-', sep)
-        if len(s)==0 or re.match("[^A-Za-z]", s[0]):
+        if len(s)==0 or re.match("[A-Za-z_]", s[0]) is None:
             s = "_" + s
         return String(s)
 
