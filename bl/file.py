@@ -22,9 +22,10 @@ class File(Dict):
         subprocess.call(['open', fn], shell=True)
 
     def read(self, mode='rb'):
-        with open(self.fn, mode) as f:
-            data = f.read()
-        return data
+        if self.fn is not None and os.path.exists(self.fn):
+            with open(self.fn, mode) as f:
+                data = f.read()
+            return data
 
     def dirpath(self):
         return os.path.dirname(os.path.abspath(self.fn)).replace('\\','/')
@@ -99,6 +100,11 @@ class File(Dict):
 
     def stat(self):
         return os.stat(self.fn)
+
+    def hash(self, **params):
+        d = self.read()
+        if d is not None:
+            return String(d).digest(**params)
 
     @property
     def last_modified(self):
