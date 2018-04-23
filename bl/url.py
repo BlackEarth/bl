@@ -48,7 +48,7 @@ class URL(Dict):
         # 2. deal with parameters
         self.scheme     = kwargs.get('scheme') or pr.scheme
         self.host       = kwargs.get('host') or pr.netloc
-        self.path       = urllib.parse.unquote(kwargs.get('path') or pr.path)
+        self.path       = self.normpath(urllib.parse.unquote(kwargs.get('path') or pr.path))
         self.params     = kwargs.get('params') or pr.params
         self.fragment   = kwargs.get('fragment') or pr.fragment
 
@@ -66,12 +66,7 @@ class URL(Dict):
             else:
                 self.qargs[k] = qargs[k]
 
-        # 4. normalize the path
-        self.path = self.path.replace('\\','/')     # backslash sometimes comes in from Windows.
-        if self.path != '/':
-            self.path = self.path.rstrip('/')
-
-        # 5. deal with file: URL anomalies in urllib
+        # 4. deal with file: URL anomalies in urllib
         if self.scheme == 'file' and self.host != '':
             self.path, self.host = self.join(self.host, self.path).path, ''
 
@@ -113,6 +108,13 @@ class URL(Dict):
             return None
         else:
             return self.__class__(self, path=path)
+
+    @classmethod
+    def normpath(C, path):
+        p = path.replace('\\','/')     # backslash sometimes comes in from Windows.
+        if p != '/':
+            p = p.rstrip('/')
+        return p
 
     def split(self):
         return str(self).split('/')
