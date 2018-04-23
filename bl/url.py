@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os, re, urllib.parse
+import logging, os, re, urllib.parse
 from bl.dict import Dict
+
+LOG = logging.getLogger(__name__)
 
 # pattern from https://gist.github.com/gruber/249502#gistcomment-1328838
 PATTERN = r"""\b((?:[a-z][\w\-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]|\((?:[^\s()<>]|(?:\([^\s()<>]+\)))*\))+(?:\((?:[^\s()<>]|(?:\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"""
@@ -26,26 +28,36 @@ class URL(Dict):
     URL('http://blackearth.us:8888/this/is;really?not=something#important')
 """
 
-    def __init__(self, url='', scheme=None, host=None, path=None, params=None, 
-                fragment=None, query=None, qargs={}):
-        """create a URL object from the given url string."""
-
+    def __init__(self, url='', **kwargs):
+        """create a URL object from the given url cast to str via str(url).
+        The given url can be modified with the following key-word arguments:
+        * scheme    = the URL scheme (http, file, mailto, etc.)
+        * host      = the host server
+        * path      = the path on the host server
+        * params    = any URL parameters (begins with ;)
+        * fragment  = URL fragment (begins with #)
+        * query     = URL query (begins with ?)
+        * qargs     = an alternative form of query, with the arguments already parsed into a dict
+        """
         # 1. parse the url string
         # s = str(url).replace('file://', 'file:')    # needed for file URLs to parse correctly
-        pr = urllib.parse.urlparse(url)
+        args = {k:kwargs[k] for k in ['scheme', 'host', 'path', 'params', 'fragment', 'query', 'qargs'] if kwargs.get(k) not in [None, {}, '']}
+        LOG.debug("URL.__init__(%r, %r)" % (url, args))
+        pr = urllib.parse.urlparse(str(url))
 
         # 2. deal with parameters
-        self.scheme     = scheme or pr.scheme
-        self.host       = host or pr.netloc
-        self.path       = urllib.parse.unquote(path or pr.path)
-        self.params     = params or pr.params
-        self.fragment   = fragment or pr.fragment
+        self.scheme     = kwargs.get('scheme') or pr.scheme
+        self.host       = kwargs.get('host') or pr.netloc
+        self.path       = urllib.parse.unquote(kwargs.get('path') or pr.path)
+        self.params     = kwargs.get('params') or pr.params
+        self.fragment   = kwargs.get('fragment') or pr.fragment
 
         # 3. deal with query arguments
-        d = Dict(**urllib.parse.parse_qs(query or pr.query))
+        d = Dict(**urllib.parse.parse_qs(kwargs.get('query') or pr.query))
         for k in d:
             d[k] = d[k][-1]     # only keep the last instance of an argument
             if d[k] in [None, '']: _=d.pop('k')
+        qargs = kwargs.get('qargs') or {}
         self.qargs = d
         for k in qargs.keys():
             if qargs[k] in ['', None]: 
@@ -56,7 +68,7 @@ class URL(Dict):
 
         # 4. normalize the path
         self.path = self.path.replace('\\','/')     # backslash sometimes comes in from Windows.
-        if path != '/':
+        if self.path != '/':
             self.path = self.path.rstrip('/')
 
         # 5. deal with file: URL anomalies in urllib
