@@ -111,7 +111,7 @@ class URL(Dict):
 
     @classmethod
     def normpath(C, path):
-        p = path.replace('\\','/')     # backslash sometimes comes in from Windows.
+        p = path.replace('\\','/').strip()     # backslash sometimes comes in from Windows.
         if p != '/':
             p = p.rstrip('/')
         return p

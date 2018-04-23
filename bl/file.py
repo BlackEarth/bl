@@ -8,7 +8,8 @@ log = logging.getLogger(__name__)
 
 class File(Dict):
     def __init__(self, fn=None, data=None, **args):
-        if type(fn)==str: fn=fn.strip().replace('\\','/')
+        if type(fn)==str: 
+            fn = self.normpath(fn)
         Dict.__init__(self, fn=fn, data=data, **args)
 
     def __repr__(self):
@@ -28,7 +29,14 @@ class File(Dict):
             return data
 
     def dirpath(self):
-        return os.path.dirname(os.path.abspath(self.fn)).replace('\\','/')
+        return self.normpath(os.path.dirname(os.path.abspath(self.fn)))
+
+    @classmethod
+    def normpath(C, path):
+        p = path.replace('\\', '/').strip()
+        if p != '/':
+            p = p.rstrip('/')
+        return p
 
     @property
     def size(self):
