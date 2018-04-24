@@ -38,7 +38,7 @@ class Dict(dict):
         {'a': 1, 'b': 2}
         {'a': 1, 'b': 2, 'c': 3}
         >>> 
-        Note that d1 has not been changed — this method creates a new dict based
+        Note that d1 has not been changed -- this method creates a new dict based
         on the old one without changing the old one.
         """
         d = xCqNck7t.__class__(*args, **xCqNck7t)
