@@ -33,7 +33,7 @@ class File(Dict):
 
     @classmethod
     def normpath(C, path):
-        p = path.replace('\\', '/').strip()
+        p = path.replace('\\ ', ' ').replace('\\(','(').replace('\\)',')').replace('\\', '/').strip()
         if p != '/':
             p = p.rstrip('/')
         return p
