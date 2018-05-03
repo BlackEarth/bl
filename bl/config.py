@@ -173,8 +173,7 @@ if __name__ == "__main__":
         doctest.testmod()
     elif sys.argv[1]=='package':
         path = sys.argv[2]
-        if len(sys.argv) > 3:
-            params = json.loads(sys.argv[3])
-        else:
-            params = {}
+        params = {}
+        for arg in sys.argv[3:]:
+            params.update(**json.loads(arg))
         package_config(path, **params)
