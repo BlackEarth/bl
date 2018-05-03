@@ -1,11 +1,14 @@
 
-import os, re, sys, time
+import logging, os, re, sys, time, json
 from configparser import ConfigParser, BasicInterpolation, ExtendedInterpolation
 from bl.dict import Dict         # needed for dot-attribute notation
+from bl.rglob import rglob
+from collections import OrderedDict
 
 LIST_PATTERN = "^\[\s*([^,]*)\s*(,\s*[^,]*)*,?\s*\]$"
 DICT_ELEM = """(\s*['"].+['"]\s*:\s*[^,]+)"""
 DICT_PATTERN = """^\{\s*(%s,\s*%s*)?,?\s*\}$""" % (DICT_ELEM, DICT_ELEM)
+log = logging.getLogger(os.path.basename(__file__))
 
 class Config(Dict):
     """class for holding application configuration in an Ini file. 
@@ -48,7 +51,9 @@ class Config(Dict):
         return "%s(%r)" % (self.__class__.__name__, self.__filename__)
 
     def parse_config(self, config, split_list=None):
+        self.__dict__['ordered_keys'] = []
         for s in config.sections():
+            self.__dict__['ordered_keys'].append(s)
             self[s] = Dict()
             for k, v in config.items(s):
                 # resolve common data types
@@ -70,13 +75,10 @@ class Config(Dict):
 
     def write(self, fn=None, sorted=False, wait=0):
         """write the contents of this config to fn or its __filename__.
-
-        NOTE: All interpolations will be expanded in the written file.
         """
         config = ConfigParser(interpolation=None)
-        keys = self.keys()
         if sorted==True: keys.sort()
-        for key in keys:
+        for key in self.__dict__.get('ordered_keys') or self.keys():
             config[key] = {}
             ks = self[key].keys()
             if sorted==True: ks.sort()
@@ -104,17 +106,22 @@ class ConfigTemplate(Config):
     """load the config with interpolation=None, so as to provide a template"""
     Interpolation = None
 
-    def expects(self):
-        """returns a Dict of params that this ConfigTemplate expects to receive"""
-        params = Dict()
-        regex = re.compile("(?<![\{\$])\{([^\{\}]+)\}")
+    def expected_param_keys(self):
+        """returns a list of params that this ConfigTemplate expects to receive"""
+        expected_keys = []
+        r = re.compile('%\(([^\)]+)\)s')
         for block in self.keys():
             for key in self[block].keys():
-                for param in re.findall(regex, str(self[block][key])):
-                    b, k = param.split('.')
-                    if b not in params: params[b] = Dict()
-                    params[b][k] = None
-        return params
+                s = self[block][key]
+                if type(s)!=str: continue
+                md = re.search(r, s)
+                while md is not None:
+                    k = md.group(1)
+                    if k not in expected_keys:
+                        expected_keys.append(k)
+                    s = s[md.span()[1]:]
+                    md = re.search(r, s)
+        return expected_keys
 
     def render(self, fn=None, prompt=False, **params):
         """return a Config with the given params formatted via ``str.format(**params)``.
@@ -122,56 +129,52 @@ class ConfigTemplate(Config):
         prompt=False    : If True, will prompt for any param that is None.
         """
         from getpass import getpass
-        expected_params = self.expects()
-        params = Dict(**params)
-        if prompt==True:
-            for block in expected_params.keys():
-                if block not in params.keys():
-                    params[block] = Dict()
-                for key in expected_params[block].keys():
-                    if params[block].get(key) is None:
-                        if key=='password':
-                            params[block][key] = getpass("%s.%s: " % (block, key))
-                        else:
-                            params[block][key] = input("%s.%s: " % (block, key)).replace(r'\ ', ' ')
-        config = Config(**self)
-        if fn is None and self.__dict__.get('__filename__') is not None: 
-            fn = os.path.splitext(self.__dict__.get('__filename__'))[0]
-        config.__dict__['__filename__'] = fn
+        expected_keys = self.expected_param_keys()
+        compiled_params = Dict(**params)
+        for key in expected_keys:
+            if key not in compiled_params.keys():
+                if prompt==True:
+                    if key=='password':
+                        compiled_params[key] = getpass("%s: " % key)
+                    else:
+                        compiled_params[key] = input("%s: " % key)
+                        if 'path' in key:
+                            compiled_params[key] = compiled_params[key].replace('\\','')
+                else:
+                    compiled_params[key] = "%%(%s)s" % key
+
+        config = ConfigTemplate(fn=fn, **self)
+        config.__dict__['ordered_keys'] = self.__dict__.get('ordered_keys')
         for block in config.keys():
             for key in config[block].keys():
                 if type(config[block][key])==str:
-                    config[block][key] = config[block][key].format(**params)
+                    config[block][key] = config[block][key] % compiled_params
         return config
 
-def configure_package(path, packages=[], template_name='config.ini.TEMPLATE', 
-        config_name='config.ini', **config_params):
-    """configure the package at the given path with a config template and file.
-
-        packages        = a list of packages to search for config templates
-        config_params   = a dict containing config param blocks.
+def package_config(path, template='__config__.ini.TEMPLATE', config_name='__config__.ini', **params):
+    """configure the module at the given path with a config template and file.
+        path        = the filesystem path to the given module
+        template    = the config template filename within that path
+        config_name = the config filename within that path
+        params      = a dict containing config params, which are found in the template using %(key)s.
     """
-    import importlib
-
-    # create a ConfigTemplate from the config.ini.TEMPLATE in each dependency module.
-    # "first precedence": The first package in the packages list to include a particular config block
-    # is the one that defines that block.
-    config_template = ConfigTemplate()
-    for package in packages:
-        module = importlib.import_module(package)
-        ct_fn = os.path.join(os.path.dirname(module.__file__), template_name)
-        if os.path.exists(ct_fn):
-            ct = ConfigTemplate(fn=ct_fn)
-            for key in ct.keys():
-                if key not in config_template.keys():
-                    config_template[key] = ct[key]
-
-    # render the config
-    config = config_template.render(prompt=True, **config_params)
-    config.write(fn=os.path.join(path, config_name))
-    return Config(os.path.join(path, config_name))
+    template_fns = rglob(path, template)
+    for template_fn in template_fns:
+        config_template = ConfigTemplate(fn=template_fn)
+        config = config_template.render(
+            fn=os.path.join(os.path.dirname(template_fn), config_name), 
+            prompt=True, path=path, **params)
+        config.write()
+        log.info('wrote %r' % config)
 
 if __name__ == "__main__":
-    if len(sys.argv) == 0 or sys.argv[0]=='test':
+    if len(sys.argv) < 2 or sys.argv[1]=='test':
         import doctest
         doctest.testmod()
+    elif sys.argv[1]=='package':
+        path = sys.argv[2]
+        if len(sys.argv) > 3:
+            params = json.loads(sys.argv[3])
+        else:
+            params = {}
+        package_config(path, **params)
