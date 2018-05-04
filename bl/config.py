@@ -40,7 +40,7 @@ class Config(Dict):
         config.optionxform = lambda option: option      # don't lowercase key names
         self.__dict__['__filename__'] = fn
         self.__dict__['__join_list__'] = join_list
-        if fn is not None:
+        if fn is not None and os.path.exists(fn):
             if config.read(fn):
                 self.parse_config(config, split_list=split_list)
             else:
