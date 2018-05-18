@@ -14,10 +14,11 @@ class Text(File):
         else:
             self.text = String("")
 
-    def write(self, fn=None, text=None, encoding='UTF-8', **args):
-        try:
-            data = (text or self.text or '').encode(encoding)
-        except:
-            data = (text or self.text or '').encode()
+    def write(self, fn=None, text=None, encoding='UTF-8', data=None, **args):
+        if data is None:
+            try:
+                data = (text or self.text or '').encode(encoding)
+            except:
+                data = (text or self.text or '').encode()
         File.write(self, fn=fn, data=data, **args)
         
