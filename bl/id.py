@@ -54,6 +54,7 @@ ascii_chars = alphanum_chars + punct_chars
 
 urlslug_punct = ['-', '_', '.', '+', '!', '*', "'", '(', ')', ',']
 urlslug_chars = alphanum_chars + urlslug_punct
+slug_chars = urlslug_chars
 
 def random_id(length=8, charset=id_chars, first_charset=lcase_chars, group_char='', group_length=0):
     """Creates a random id with the given length and charset.
