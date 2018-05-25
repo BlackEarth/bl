@@ -56,22 +56,33 @@ urlslug_punct = ['-', '_', '.', '+', '!', '*', "'", '(', ')', ',']
 urlslug_chars = alphanum_chars + urlslug_punct
 slug_chars = urlslug_chars
 
-def random_id(length=8, charset=id_chars, first_charset=lcase_chars, group_char='', group_length=0):
+def random_id(length=8, charset=id_chars, first_charset=lcase_chars, group_char='', group_length=0, sep=None, group=None):
     """Creates a random id with the given length and charset.
         length=8                    the number of characters in the id
-        charset=id_chars            what character set to use (a list)
+        charset=id_chars            what character set to use (a list of characters)
         first_charset=lcase_chars   what character set for the first character
         group_char=''               what character to insert between groups
         group_length=0              how long the groups are (default 0 means no groups)
+        sep                         alias for group_char
+        group                       alias for group_length
     """
+    if sep is not None: 
+        group_char = sep
+    if group is not None:
+        group_length = group
+
     t = []
+
     firstchars = list(set(charset).intersection(first_charset))
     if len(firstchars)==0: 
         firstchars = charset
-    t.append(firstchars[int(random.random()*len(firstchars))])
-    for i in range(2,length+1):
-        t.append(charset[int(random.random()*len(charset))])
+
+    t.append(firstchars[random.randrange(len(firstchars))])
+
+    for i in range(len(t), length):
         if (group_length > 0) and (i % group_length == 0) and (i < length): 
             t.append(group_char)
+        t.append(charset[random.randrange(len(charset))])
+
     return ''.join(t)
 
