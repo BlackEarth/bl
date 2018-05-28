@@ -9,6 +9,7 @@ rm -rf $PACKAGE_PATH/tests/var/*
 
 # run the tests
 nosetests -w $PACKAGE_PATH/tests \
+ --with-doctest \
  --with-coverage \
  --cover-package=bl \
  --cover-inclusive \
