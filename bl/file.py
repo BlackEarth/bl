@@ -39,14 +39,6 @@ class File(Dict):
         return p
 
     @property
-    def size(self):
-        if self.isdir:
-            s = subprocess.check_output(['du', '-sh', self.fn]).decode('utf-8').split('\t')[0].strip()
-            return self.bytes_from_readable_size(s)
-        elif self.isfile:
-            return os.stat(self.fn).st_size
-
-    @property
     def isdir(self):
         return os.path.isdir(self.fn)
 
@@ -115,9 +107,20 @@ class File(Dict):
             return String(d).digest(**params)
 
     @property
+    def size(self):
+        if self.isdir:
+            s = subprocess.check_output(['du', '-sh', self.fn]).decode('utf-8').split('\t')[0].strip()
+            return self.bytes_from_readable_size(s)
+        elif self.isfile:
+            return self.stat().st_size
+
+    @property
     def last_modified(self):
         return datetime.datetime.fromtimestamp(self.stat().st_mtime)
 
+    mtime = last_modified
+
+    @property
     def mimetype(self):
         from mimetypes import guess_type
         return guess_type(self.fn)[0]
