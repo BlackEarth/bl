@@ -10,7 +10,7 @@ DEFAULT_CHARSETS = [UPPERCASE, LOWERCASE, NUMBERS]
 DEFAULT_LENGTH = 8
 
 
-def randpwd(length=DEFAULT_LENGTH, charsets=DEFAULT_CHARSETS, require_all_charsets=False):
+def randpwd(length=DEFAULT_LENGTH, charsets=DEFAULT_CHARSETS, require_all_charsets=True):
     l = []
     if require_all_charsets == True:
         # get one character from each charset
