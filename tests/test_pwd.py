@@ -41,3 +41,7 @@ def test_randpwd_include_all_charsets():
         assert len(found_charsets) == len(charsets)
     with pytest.raises(AssertionError):
         password = pwd.randpwd(length=len(charsets) - 1, include_all_charsets=True)
+
+
+if __name__=='__main__':
+    pytest.main()
