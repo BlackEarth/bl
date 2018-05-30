@@ -28,10 +28,10 @@ def test_randpwd_custom_charsets():
             assert c in charset
 
 
-def test_randpwd_require_all_charsets():
+def test_randpwd_include_all_charsets():
     charsets = pwd.DEFAULT_CHARSETS
     for i in range(100):
-        password = pwd.randpwd(length=len(charsets), require_all_charsets=True)
+        password = pwd.randpwd(length=len(charsets), include_all_charsets=True)
         found_charsets = []
         for c in password:
             for charset in charsets:
@@ -40,4 +40,4 @@ def test_randpwd_require_all_charsets():
                     continue
         assert len(found_charsets) == len(charsets)
     with pytest.raises(AssertionError):
-        password = pwd.randpwd(length=len(charsets) - 1, require_all_charsets=True)
+        password = pwd.randpwd(length=len(charsets) - 1, include_all_charsets=True)
