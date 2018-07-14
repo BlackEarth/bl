@@ -1,15 +1,16 @@
 
-import logging, pathlib, shutil
+import glob, logging, os
+from .file import File
+
 log = logging.getLogger(__name__)
 
-def rmtree_warn(function, path, excinfo):
-    log.warn("Could not remove %s: %s" % (path, excinfo()[1]))    
+class Folder(File):
+    
+    def __truediv__(self, other):
+        return Folder(fn=os.path.join(self.fn, str(other)))
 
-class Folder(pathlib.Path):
-
-    def __init__(self, *segments):
-        super().__init__(*segments)
-        assert self.is_dir()
-
-    def rmtree(self, ignore_errors=False, onerror=rmtree_warn):
-        shutil.rmtree(str(self), ignore_errors=False, onerror=rmtree_warn)
+    def glob(self, pattern):
+        results = [File(r) for r in glob.glob(str(Folder(self / pattern)))]
+        for i in range(len(results)):
+            if results[i].isdir: results[i] = Folder(results[i])
+        return results

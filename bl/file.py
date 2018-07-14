@@ -1,5 +1,5 @@
 
-import os, re, subprocess, sys, time, traceback, datetime
+import os, re, subprocess, sys, time, traceback, datetime, shutil
 from bl.dict import Dict
 from bl.string import String
 
@@ -10,17 +10,19 @@ class File(Dict):
     def __init__(self, fn=None, data=None, **args):
         if type(fn)==str: 
             fn = self.normpath(fn)
+        elif isinstance(fn, File):
+            fn = str(fn)
         Dict.__init__(self, fn=fn, data=data, **args)
 
     def __repr__(self):
         return "%s(fn=%r)" % (
             self.__class__.__name__, self.fn)
 
+    def __str__(self):
+        return self.fn
+
     def __lt__(self, other):
         return self.fn < other.fn
-
-    def __truediv__(self, other):
-        return File(fn=os.path.join(self.fn, str(other)))
 
     def open(self):
         subprocess.call(['open', fn], shell=True)
@@ -53,6 +55,9 @@ class File(Dict):
     def exists(self):
         return os.path.exists(self.fn)
 
+    def makedir(self):
+        os.makedirs(self.fn)
+
     def file_list(self, depth=None):
         fl = []
         if self.isdir:
@@ -68,6 +73,11 @@ class File(Dict):
     @property
     def path(self):
         return self.dirpath()
+
+    @property
+    def folder(self):
+        from .folder import Folder
+        return Folder(self.path)
 
     @property
     def basename(self):
@@ -163,7 +173,10 @@ class File(Dict):
 
     def delete(self):
         """delete the file from the filesystem."""
-        os.remove(self.fn)
+        if self.isfile:
+            os.remove(self.fn)
+        elif self.isdir:
+            shutil.rmtree(self.fn)
 
     SIZE_UNITS = ['', 'K','M','G','T','P','E','Z','Y']
 
