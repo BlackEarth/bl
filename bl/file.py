@@ -19,6 +19,9 @@ class File(Dict):
     def __lt__(self, other):
         return self.fn < other.fn
 
+    def __truediv__(self, other):
+        return File(fn=os.path.join(self.fn, str(other)))
+
     def open(self):
         subprocess.call(['open', fn], shell=True)
 
