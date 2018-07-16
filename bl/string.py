@@ -106,7 +106,7 @@ class String(str):
             s = s.encode('ascii', 'xmlcharrefreplace').decode('ascii') # use entities
         s = re.sub("&?([^;]*?);", r'.\1-', s)                   # entities
         s = s.replace('#', 'u')
-        s = re.sub("\W+", '-', s).strip(' -')
+        s = re.sub(r"\W+", '-', s).strip(' -')
         return String(s)
 
     def camelsplit(self):
