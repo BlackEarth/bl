@@ -4,6 +4,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import os, sys
 from bl.dict import Dict
 
+
 class ZIP(Dict):
     """zipfile wrapper"""
 
@@ -21,12 +22,18 @@ class ZIP(Dict):
         fn = fn or self.fn
         if not os.path.exists(os.path.dirname(fn)):
             os.makedirs(os.path.dirname(fn))
-        f = open(self.fn, 'rb'); b = f.read(); f.close()
-        f = open(fn, 'wb'); f.write(b); f.close()
+        f = open(self.fn, 'rb')
+        b = f.read()
+        f.close()
+        f = open(fn, 'wb')
+        f.write(b)
+        f.close()
 
     def unzip(self, path=None, members=None, pwd=None):
-        if path is None: path = os.path.splitext(self.fn)[0]
-        if not os.path.exists(path): os.makedirs(path)
+        if path is None:
+            path = os.path.splitext(self.fn)[0]
+        if not os.path.exists(path):
+            os.makedirs(path)
         self.zipfile.extractall(path=path, members=members, pwd=pwd)
         return path
 
@@ -36,22 +43,24 @@ class ZIP(Dict):
     @classmethod
     def zip_path(CLASS, path, fn=None, exclude=[], mode='w'):
         if fn is None:
-            fn = path+'.zip'
+            fn = path + '.zip'
         zipf = CLASS(fn, mode=mode).zipfile
         for walk_tuple in os.walk(path):
             dirfn = walk_tuple[0]
             for fp in walk_tuple[-1]:
                 walkfn = os.path.join(dirfn, fp)
                 if os.path.relpath(walkfn, path) not in exclude:
-                    zipf.write(walkfn, os.path.relpath(walkfn, path))
+                    writefn = os.path.relpath(walkfn, path)
+                    zipf.write(walkfn, writefn)
         zipf.close()
         return fn
 
-if __name__=='__main__':
-    if sys.argv[1]=='unzip':
+
+if __name__ == '__main__':
+    if sys.argv[1] == 'unzip':
         for fn in sys.argv[2:]:
             print(ZIP(fn=fn).unzip())
-    elif sys.argv[1]=='zip':
+    elif sys.argv[1] == 'zip':
         for path in sys.argv[2:]:
             print(ZIP.zip_path(path))
     else:
