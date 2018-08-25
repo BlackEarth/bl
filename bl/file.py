@@ -109,7 +109,7 @@ class File(Dict):
         return os.path.splitext(fn or self.fn)
 
     def relpath(self, dirpath=None):
-        return os.path.relpath(self.fn, dirpath or self.dirpath()).replace('\\','/')
+        return os.path.relpath(self.fn, str(dirpath or self.dirpath())).replace('\\','/')
 
     def stat(self):
         return os.stat(self.fn)
