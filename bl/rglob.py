@@ -17,11 +17,12 @@ except:                                                 # support Python < 3.4
 def rglob(dirname, pattern, dirs=False, sort=True):
     """recursive glob, gets all files that match the pattern within the directory tree"""
     fns = []
-    if os.path.isdir(dirname):
-        fns = glob(os.path.join(escape(dirname), pattern))
+    path = str(dirname)
+    if os.path.isdir(path):
+        fns = glob(os.path.join(escape(path), pattern))
         dns = [fn for fn 
-                in [os.path.join(dirname, fn)
-                    for fn in os.listdir(dirname)] 
+                in [os.path.join(path, fn)
+                    for fn in os.listdir(path)] 
                 if os.path.isdir(fn)]
         if dirs==True:
             fns += dns
@@ -30,5 +31,5 @@ def rglob(dirname, pattern, dirs=False, sort=True):
         if sort==True:
             fns.sort()
     else:
-        log.warn("not a directory: %r" % dirname)
+        log.warn("not a directory: %r" % path)
     return fns
