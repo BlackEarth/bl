@@ -7,11 +7,13 @@ import logging
 log = logging.getLogger(__name__)
 
 class File(Dict):
-    def __init__(self, fn=None, data=None, **args):
+    def __init__(self, fn=None, data=None, ext=None, **args):
         if type(fn)==str: 
             fn = self.normpath(fn)
         elif isinstance(fn, File):
             fn = str(fn)
+        if ext is not None:
+            fn = os.path.splitext(fn)[0] + ext
         Dict.__init__(self, fn=fn, data=data, **args)
 
     def __repr__(self):
