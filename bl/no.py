@@ -18,7 +18,7 @@ class No:
         return No()
 
 
-class Dict(dict):
+class NoDict(dict):
     def __call__(self, **kwargs):
         return self.__class__(self, **kwargs)
 
@@ -43,7 +43,7 @@ class Dict(dict):
         return json.dumps(self)
 
 
-class SortedDict(Dict):
+class SortedNoDict(NoDict):
     """Dict with keys sorted."""
 
     def keys(self, key=None, reverse=False):
