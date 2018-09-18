@@ -61,7 +61,7 @@ class String(str):
     def titleify(self, lc_words=LOWERCASE_WORDS['en'], allwords=False, lastword=True):
         """takes a string and makes a title from it"""
         s = str(self)
-        l = re.split("([_\W]+)", s.strip())
+        l = re.split(r"([_\W]+)", s.strip())
         for i in range(len(l)):
             l[i] = l[i].lower()
             if allwords==True or i == 0 \
