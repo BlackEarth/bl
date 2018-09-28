@@ -44,8 +44,8 @@ hex_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd
 alpha_chars = lcase_chars + ucase_chars
 alphanum_chars = alpha_chars + num_chars
 b64_chars = alphanum_chars + ['-', '_']
-id_chars = b64_chars
-id_first_chars = alpha_chars + ['_']
+id_chars = alphanum_chars  # conservative defaults work everywhere
+id_first_chars = alpha_chars
 punct_chars = (
     ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(']
     + [')', '_', '-', '+', '=', '[', '{', ']', '}', '|']
@@ -57,7 +57,7 @@ urlslug_chars = alphanum_chars + urlslug_punct
 slug_chars = urlslug_chars
 
 
-def random_id(length=16, charset=id_chars, first_charset=id_first_chars, sep='', group=0):
+def random_id(length=16, charset=alphanum_chars, first_charset=alpha_chars, sep='', group=0):
     """Creates a random id with the given length and charset.
     ## Parameters
     * length          the number of characters in the id
