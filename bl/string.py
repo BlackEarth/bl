@@ -51,6 +51,10 @@ class String(str):
         else:
             return h.hexdigest()
 
+    def base64(self):
+        import base64 as b64
+        return b64.urlsafe_b64encode(bytes(self, encoding='utf-8'))
+
     def camelify(self):
         """turn a string to CamelCase, omitting non-word characters"""
         outstring = self.titleify(allwords=True)
