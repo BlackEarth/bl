@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import logging, os, re, urllib.parse
+import os, re, urllib.parse
 from bl.dict import Dict
-
-LOG = logging.getLogger(__name__)
 
 # pattern from https://gist.github.com/gruber/249502#gistcomment-1328838
 PATTERN = r"""\b((?:[a-z][\w\-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]|\((?:[^\s()<>]|(?:\([^\s()<>]+\)))*\))+(?:\((?:[^\s()<>]|(?:\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))"""
@@ -42,7 +40,6 @@ class URL(Dict):
         # 1. parse the url string
         # s = str(url).replace('file://', 'file:')    # needed for file URLs to parse correctly
         args = {k:kwargs[k] for k in ['scheme', 'host', 'path', 'params', 'fragment', 'query', 'qargs'] if kwargs.get(k) not in [None, {}, '']}
-        LOG.debug("URL.__init__(%r, %r)" % (url, args))
         pr = urllib.parse.urlparse(str(url))
 
         # 2. deal with parameters

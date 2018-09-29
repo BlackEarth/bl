@@ -62,10 +62,14 @@ class String(str):
         outstring = re.sub("\W+", "", outstring)
         return String(outstring)
 
-    def titleify(self, lc_words=LOWERCASE_WORDS['en'], allwords=False, lastword=True):
+    def titleify(self, lang='en', allwords=False, lastword=True):
         """takes a string and makes a title from it"""
+        if lang in LOWERCASE_WORDS:
+            lc_words = LOWERCASE_WORDS[lang]
+        else:
+            lc_words = []
         s = str(self)
-        l = re.split(r"([_\W]+)", s.strip())
+        l = re.split(r"([_\W]+)", s)
         for i in range(len(l)):
             l[i] = l[i].lower()
             if allwords==True or i == 0 \
