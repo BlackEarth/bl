@@ -68,7 +68,7 @@ class String(str):
             lc_words = LOWERCASE_WORDS[lang]
         else:
             lc_words = []
-        s = str(self)
+        s = str(self).strip()
         l = re.split(r"([_\W]+)", s)
         for i in range(len(l)):
             l[i] = l[i].lower()
