@@ -4,11 +4,13 @@ from bl.dict import Dict
 from bl.string import String
 
 import logging
+
 log = logging.getLogger(__name__)
+
 
 class File(Dict):
     def __init__(self, fn=None, data=None, ext=None, **args):
-        if type(fn)==str: 
+        if type(fn) == str:
             fn = self.normpath(fn)
         elif isinstance(fn, File):
             fn = str(fn)
@@ -17,8 +19,7 @@ class File(Dict):
         Dict.__init__(self, fn=fn, data=data, **args)
 
     def __repr__(self):
-        return "%s(fn=%r)" % (
-            self.__class__.__name__, self.fn)
+        return "%s(fn=%r)" % (self.__class__.__name__, self.fn)
 
     def __str__(self):
         return self.fn
@@ -40,7 +41,13 @@ class File(Dict):
 
     @classmethod
     def normpath(C, path):
-        p = path.replace('\\ ', ' ').replace('\\(','(').replace('\\)',')').replace('\\', '/').strip()
+        p = (
+            path.replace('\\ ', ' ')
+            .replace('\\(', '(')
+            .replace('\\)', ')')
+            .replace('\\', '/')
+            .strip()
+        )
         if p != '/':
             p = p.rstrip('/')
         return p
@@ -65,12 +72,18 @@ class File(Dict):
         if self.isdir:
             for folder in os.walk(self.fn):
                 if folder[0] != self.fn:
-                    fl.append(File(fn=folder[0]))    # add the folder itself
+                    fl.append(File(fn=folder[0]))  # add the folder itself
                 for fb in folder[2]:
                     fl.append(File(fn=os.path.join(folder[0], fb)))
         if depth is not None:
-            fl = [fi for fi in fl if len(os.path.relpath(fi.fn, self.fn).split(os.path.sep)) <= depth]
+            fl = [
+                fi for fi in fl if len(os.path.relpath(fi.fn, self.fn).split(os.path.sep)) <= depth
+            ]
         return fl
+
+    @property
+    def filename(self):
+        return self.fn
 
     @property
     def path(self):
@@ -79,6 +92,7 @@ class File(Dict):
     @property
     def folder(self):
         from .folder import Folder
+
         return Folder(self.path)
 
     @property
@@ -96,9 +110,11 @@ class File(Dict):
     def clean_filename(self, fn=None, ext=None):
         fn = fn or self.fn or ''
         if fn not in [None, '']:
-            return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext)).replace('\\','/')
+            return os.path.join(os.path.dirname(fn), self.make_basename(fn=fn, ext=ext)).replace(
+                '\\', '/'
+            )
         else:
-            return fn.replace('\\','/')
+            return fn.replace('\\', '/')
 
     def make_basename(self, fn=None, ext=None):
         """make a filesystem-compliant basename for this file"""
@@ -111,7 +127,7 @@ class File(Dict):
         return os.path.splitext(fn or self.fn)
 
     def relpath(self, dirpath=None):
-        return os.path.relpath(self.fn, str(dirpath or self.dirpath())).replace('\\','/')
+        return os.path.relpath(self.fn, str(dirpath or self.dirpath())).replace('\\', '/')
 
     def stat(self):
         return os.stat(self.fn)
@@ -124,7 +140,12 @@ class File(Dict):
     @property
     def size(self):
         if self.isdir:
-            s = subprocess.check_output(['du', '-sh', self.fn]).decode('utf-8').split('\t')[0].strip()
+            s = (
+                subprocess.check_output(['du', '-sh', self.fn])
+                .decode('utf-8')
+                .split('\t')[0]
+                .strip()
+            )
             return self.bytes_from_readable_size(s)
         elif self.isfile:
             return self.stat().st_size
@@ -138,6 +159,7 @@ class File(Dict):
     @property
     def mimetype(self):
         from mimetypes import guess_type
+
         return guess_type(self.fn)[0]
 
     def tempfile(self, mode='wb', **args):
@@ -146,27 +168,29 @@ class File(Dict):
         self.write(tf.name, mode=mode, **args)
         return tfn
 
-    def write(self, fn=None, data=None, mode='wb', 
-                max_tries=3):                   # sometimes there's a disk error on SSD, so try 3x
-        def try_write(fd, outfn, tries=0):         
+    def write(
+        self, fn=None, data=None, mode='wb', max_tries=3
+    ):  # sometimes there's a disk error on SSD, so try 3x
+        def try_write(fd, outfn, tries=0):
             try:
                 if fd is None and os.path.exists(self.fn):
                     if 'b' in mode:
-                        fd=self.read(mode='rb')
+                        fd = self.read(mode='rb')
                     else:
-                        fd=self.read(mode='r')
+                        fd = self.read(mode='r')
                 f = open(outfn, mode)
                 f.write(fd or b'')
                 f.close()
                 log.debug('wrote %s' % outfn)
-            except: 
+            except:
                 log.warn(sys.exc_info()[1])
                 if tries < max_tries:
                     log.debug(traceback.format_exc())
-                    time.sleep(.1)              # I found 0.1 s gives the disk time to recover. YMMV
-                    try_write(fd, outfn, tries=tries+1)
+                    time.sleep(.1)  # I found 0.1 s gives the disk time to recover. YMMV
+                    try_write(fd, outfn, tries=tries + 1)
                 else:
                     raise
+
         outfn = fn or self.fn
         if not os.path.exists(os.path.dirname(outfn)):
             log.debug("creating directory: %s" % os.path.dirname(outfn))
@@ -180,18 +204,22 @@ class File(Dict):
         elif self.isdir:
             shutil.rmtree(self.fn)
 
-    SIZE_UNITS = ['', 'K','M','G','T','P','E','Z','Y']
+    SIZE_UNITS = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 
     @classmethod
     def readable_size(C, bytes, suffix='B', decimals=1, sep='\u00a0'):
         """given a number of bytes, return the file size in readable units"""
-        if bytes is None: return
+        if bytes is None:
+            return
         size = float(bytes)
         for unit in C.SIZE_UNITS:
             if abs(size) < 1024 or unit == C.SIZE_UNITS[-1]:
                 return "{size:.{decimals}f}{sep}{unit}{suffix}".format(
-                    size=size, unit=unit, suffix=suffix, sep=sep,
-                    decimals=C.SIZE_UNITS.index(unit) > 0 and decimals or 0       # B with no decimal
+                    size=size,
+                    unit=unit,
+                    suffix=suffix,
+                    sep=sep,
+                    decimals=C.SIZE_UNITS.index(unit) > 0 and decimals or 0,  # B with no decimal
                 )
             size /= 1024
 
@@ -202,5 +230,5 @@ class File(Dict):
         bytes, unit = round(float(s[1])), s[2].upper()
         while unit in C.SIZE_UNITS and C.SIZE_UNITS.index(unit) > 0:
             bytes *= 1024
-            unit = C.SIZE_UNITS[C.SIZE_UNITS.index(unit)-1]
+            unit = C.SIZE_UNITS[C.SIZE_UNITS.index(unit) - 1]
         return bytes
