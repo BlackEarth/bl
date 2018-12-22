@@ -2,6 +2,7 @@
 import os, re, subprocess, sys, time, traceback, datetime, shutil
 from bl.dict import Dict
 from bl.string import String
+from bl.rglob import rglob
 
 import logging
 
@@ -12,7 +13,7 @@ class File(Dict):
     def __init__(self, fn=None, data=None, ext=None, **args):
         if type(fn) == str:
             fn = self.normpath(fn)
-        elif isinstance(fn, File):
+        elif isinstance(fn, self.__class__):
             fn = str(fn)
         if ext is not None:
             fn = os.path.splitext(fn)[0] + ext
@@ -51,6 +52,17 @@ class File(Dict):
         if p != '/':
             p = p.rstrip('/')
         return p
+
+    @classmethod
+    def match(Class, path, pattern, flags=re.I, ext=None):
+        """for a given path and regexp pattern, return the files that match"""
+        return sorted(
+            [
+                Class(fn=fn)
+                for fn in rglob(path, f"*{ext or ''}")
+                if re.search(pattern, os.path.basename(fn), flags=flags) is not None
+            ]
+        )
 
     @property
     def isdir(self):
@@ -152,9 +164,15 @@ class File(Dict):
 
     @property
     def last_modified(self):
-        return datetime.datetime.fromtimestamp(self.stat().st_mtime)
+        return datetime.datetime.fromtimestamp(self.mtime)
 
-    mtime = last_modified
+    @property
+    def mtime(self):
+        return self.stat().st_mtime
+
+    @property
+    def atime(self):
+        return self.stat().st_atime
 
     @property
     def mimetype(self):
