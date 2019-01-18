@@ -54,14 +54,15 @@ class File(Dict):
         return p
 
     @classmethod
-    def match(Class, path, pattern, flags=re.I, ext=None):
+    def match(Class, path, pattern, flags=re.I, sortkey=None, ext=None):
         """for a given path and regexp pattern, return the files that match"""
         return sorted(
             [
                 Class(fn=fn)
                 for fn in rglob(path, f"*{ext or ''}")
                 if re.search(pattern, os.path.basename(fn), flags=flags) is not None
-            ]
+            ],
+            key=sortkey,
         )
 
     @property
@@ -119,6 +120,13 @@ class File(Dict):
     def name(self):
         return self.splitext(fn=self.basename)[0]
 
+    def copy(self, new_fn):
+        """copy the file to the new_fn, preserving atime and mtime"""
+        new_file = self.__class__(fn=str(new_fn))
+        new_file.write(data=self.read())
+        new_file.utime(self.atime, self.mtime)
+        return new_file
+
     def clean_filename(self, fn=None, ext=None):
         fn = fn or self.fn or ''
         if fn not in [None, '']:
@@ -173,6 +181,9 @@ class File(Dict):
     @property
     def atime(self):
         return self.stat().st_atime
+
+    def utime(self, atime, mtime):
+        os.utime(self.fn, times=(atime, mtime))
 
     @property
     def mimetype(self):
