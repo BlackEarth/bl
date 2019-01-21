@@ -61,6 +61,7 @@ class File(Dict):
                 Class(fn=fn)
                 for fn in rglob(path, f"*{ext or ''}")
                 if re.search(pattern, os.path.basename(fn), flags=flags) is not None
+                and os.path.basename(fn)[0] != '~'  # omit temp files
             ],
             key=sortkey,
         )
