@@ -10,10 +10,11 @@ class Folder(File):
     def __truediv__(self, other):
         """enable the use of / as an operator to build paths"""
         fn = '/'.join([self.fn, str(other)])
-        if os.path.isdir(fn):
-            return Folder(fn=fn)
-        else:
+        if os.path.isfile(fn):
             return File(fn=fn)
+        else:
+            return Folder(fn=fn)
+
 
     def glob(self, pattern):
         results = [File(r) for r in glob.glob(str(Folder(self / pattern)))]
