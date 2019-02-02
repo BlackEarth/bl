@@ -1,4 +1,3 @@
-
 import glob, logging, os
 import bl.rglob
 from .file import File
@@ -15,9 +14,12 @@ class Folder(File):
         else:
             return Folder(fn=fn)
 
-
-    def glob(self, pattern):
-        results = [File(r) for r in glob.glob(str(Folder(self / pattern)))]
+    def glob(self, pattern, folders=True):
+        results = [
+            file
+            for file in [File(r) for r in glob.glob(str(Folder(self / pattern)))]
+            if folders is True or not file.isdir
+        ]
         for i in range(len(results)):
             if results[i].isdir:
                 results[i] = Folder(results[i])
