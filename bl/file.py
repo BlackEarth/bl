@@ -23,7 +23,7 @@ class File(Dict):
         return "%s(fn=%r)" % (self.__class__.__name__, self.fn)
 
     def __str__(self):
-        return self.fn
+        return str(self.fn)
 
     def __lt__(self, other):
         return self.fn < other.fn
@@ -68,18 +68,18 @@ class File(Dict):
 
     @property
     def isdir(self):
-        return os.path.isdir(self.fn)
+        return os.path.isdir(str(self.fn))
 
     @property
     def isfile(self):
-        return os.path.isfile(self.fn)
+        return os.path.isfile(str(self.fn))
 
     @property
     def exists(self):
-        return os.path.exists(self.fn)
+        return os.path.exists(str(self.fn))
 
     def makedir(self):
-        os.makedirs(self.fn)
+        os.makedirs(str(self.fn))
 
     def file_list(self, depth=None):
         fl = []
@@ -111,7 +111,7 @@ class File(Dict):
 
     @property
     def basename(self):
-        return os.path.basename(self.fn)
+        return os.path.basename(str(self.fn))
 
     @property
     def ext(self):
