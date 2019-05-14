@@ -1,4 +1,6 @@
 # definition of a dict-replacement class that allows dot-notation attribute access
+import collections
+
 
 class Dict(dict):
     """A dict class that:
@@ -28,7 +30,7 @@ class Dict(dict):
         # The random name for self here is necessary to avoid key conflicts with "self"
         # (used as a key, e.g., in the WordPress API).
         dict.__init__(xCqNck7t)
-        xCqNck7t.update(**kwargs)        
+        xCqNck7t.update(**kwargs)
 
     def __call__(xCqNck7t, *args, **kwargs):
         """Dict(key=val) creates a new dict with the key:val. That has always been true for 
@@ -47,29 +49,31 @@ class Dict(dict):
 
     def update(xCqNck7t, **kwargs):
         """Updates the Dict with the given values. Turns internal dicts into Dicts."""
+
         def dict_list_val(inlist):
             l = []
             for i in inlist:
-                if type(i)==dict:
+                if type(i) == dict:
                     l.append(Dict(**i))
-                elif type(i)==list:
+                elif type(i) == list:
                     l.append(make_list(i))
-                elif type(i)==bytes:
+                elif type(i) == bytes:
                     l.append(i.decode('UTF-8'))
                 else:
                     l.append(i)
             return l
+
         for k in list(kwargs.keys()):
-            if type(kwargs[k])==dict:
+            if type(kwargs[k]) == dict:
                 xCqNck7t[k] = Dict(**kwargs[k])
-            elif type(kwargs[k])==list:
+            elif type(kwargs[k]) == list:
                 xCqNck7t[k] = dict_list_val(kwargs[k])
             else:
                 xCqNck7t[k] = kwargs[k]
 
     # allow dot-notation attribute access alongside dict-notation
     def __getattr__(self, name):
-        return dict.get(self, name)       # returns None if the key is not found.
+        return dict.get(self, name)  # returns None if the key is not found.
 
     def __setattr__(self, name, val):
         self[name] = val
@@ -84,7 +88,7 @@ class Dict(dict):
         """sort the keys before returning them"""
         ks = sorted(list(dict.keys(self)), key=key, reverse=reverse)
         return ks
-        
+
     def values(self, key=None, reverse=False):
         """sort the values in the same order as the keys"""
         ks = self.keys(key=key, reverse=reverse)
@@ -93,7 +97,12 @@ class Dict(dict):
     def json(self, **params):
         import json as _json
         return _json.dumps(self, **params)
-  
+
+
+class OrderedDict(collections.OrderedDict, Dict):
+    """OrderedDict with dot-attribute access"""
+
+
 class StringDict(Dict):
     """Returns "" when a key does not exist. This is useful in web apps and 
     where a value is going to be built based on conditions, without needing to
@@ -101,10 +110,11 @@ class StringDict(Dict):
     >>> sd = StringDict()
     >>> sd.name += "A Dict"     # Able to use += here.
     """
+
     def __getattr__(self, name):
         return Dict.get(self, name) or ""
+
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
