@@ -80,7 +80,3 @@ def random_id(length=16, charset=alphanum_chars, first_charset=alpha_chars, sep=
         t.append(charset[random.randrange(len(charset))])
 
     return ''.join(t)
-
-
-# partial functions to provide callable defaults like in Django ORM.
-random_id_32 = functools.partial(random_id, 32)
