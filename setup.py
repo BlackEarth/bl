@@ -1,7 +1,7 @@
 
 config = {
   "name": "bl",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Black Earth core library",
   "url": "https://github.com/BlackEarth/bl",
   "author": "Sean Harrison",
